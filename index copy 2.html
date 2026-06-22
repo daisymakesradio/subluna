@@ -6,16 +6,6 @@
   <title>SUBLUNA RADIO</title>
   <script>history.scrollRestoration='manual';</script>
   <meta name="theme-color" content="#0a0908">
-
-  <!-- PWA: makes the app installable and removes browser chrome when launched from home screen -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/icon-192.png">
-  <link rel="apple-touch-icon" href="/icon-192.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="SUBLUNA">
-  <meta name="mobile-web-app-capable" content="yes">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <style>
@@ -474,7 +464,7 @@
       position: fixed;
       top: var(--topbar-h);
       left: 0;
-      width: calc(95vw - 35px); /* full page minus tab width */
+      width: calc(100vw - 20px); /* full page minus tab width */
       height: calc(100vh - var(--topbar-h));
       z-index: 10010; /* above bg, below radio bar (10020) */
       display: flex;
@@ -497,7 +487,7 @@
       background: rgba(5, 4, 4, 0.72);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-/*       border-right: 0.5px solid rgba(224, 85, 64, 0.3); */
+      border-right: 0.5px solid rgba(224, 85, 64, 0.3);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -509,9 +499,9 @@
       top: var(--topbar-h);
       left: 0;
       z-index: 10015;
-      width: 50px;
+      width: 35px;
       height: calc(100vh - var(--topbar-h));
-      background: rgba(20, 6, 5, 0);
+      background: rgba(20, 6, 5, 0.92);
       border-right: 0px solid var(--signal);
       display: flex;
       align-items: center;
@@ -521,10 +511,10 @@
       user-select: none;
     }
     #sidebar-tab:hover {
-      background: rgba(43, 5, 2, 0);
+      background: rgba(43, 5, 2, 0.453);
     }
     body.sidebar-open #sidebar-tab {
-      left: calc(95vw - 35px);
+      left: calc(100vw - 35px);
     }
     .sidebar-tab-arrow {
       font-size: 13px;
@@ -1009,14 +999,14 @@
         <div class="wx-section-label">weather</div>
 
         <!-- Location input row -->
-<!--         <div id="wx-loc-row">
+        <div id="wx-loc-row">
           <input id="wx-city-input" type="text" placeholder="city or place…"
             oninput="wxCityInput(this.value)"
             onkeydown="if(event.key==='Enter')wxCitySubmit()">
           <button id="wx-geolocate-btn" onclick="wxGeolocate()" title="use my location">◎</button>
           <div id="wx-suggestions"></div>
         </div>
-        <div id="wx-loc-status"></div> -->
+        <div id="wx-loc-status"></div>
 
         <!-- Current conditions -->
         <div id="wx-main">
@@ -1038,7 +1028,7 @@
           <div class="horo-section-label">daily horoscope</div>
           <div id="horo-sign-name"></div>
           <div id="horo-text">loading…</div>
-        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        </div>
 
       </div>
     </div>
@@ -1739,7 +1729,7 @@
     const lo = today.mintempF ? Math.round(today.mintempF) + '°F' : null;
     const hilo = (hi && lo) ? `${hi} ↑  ${lo} ↓` : '';
 
-    // Hourly — wttr gives 3-hour slots 3 hour weather
+    // Hourly — wttr gives 3-hour slots
     const todaySlots = (today.hourly || []);
     const now = new Date();
     const curH = now.getHours();
@@ -2009,10 +1999,9 @@
     const tab = document.getElementById('sidebar-tab');
     if (tab) tab.onclick = sidebarToggleWithHoro;
   });
+  
 
-</script>
-
-<script src="radio.js"></script>
+  <script src="radio.js"></script>
   <script src="star-chart.js"></script>
 </body>
 </html>
