@@ -559,12 +559,250 @@
       font-weight: 600;
       letter-spacing: 0.13em;
       color: var(--dim);
-      line-height: 1;
+      line-height: 0;
       margin-bottom: 1.5rem;
       padding-bottom: 1rem;
-      border-bottom: .5px solid var(--faint);
+      border-bottom: 0px solid var(--faint);
     }
     .sidebar-day-title span { color: var(--signal); }
+
+
+    /* ── Widget system ───────────────────────────────────────────────── */
+    #widget-add-bar {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: 1.1rem;
+      padding-bottom: .9rem;
+      border-bottom: 0px solid var(--faint);
+    }
+    #widget-add-btn {
+      background: transparent;
+      border: .5px solid rgba(193,184,173,0.2);
+      color: var(--dust);
+      font-family: 'Heading Now Medium', sans-serif;
+      font-size: 7px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      padding: .32rem .7rem;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      white-space: nowrap;
+    }
+    #widget-add-btn:hover { border-color: var(--signal); color: var(--signal); }
+
+    #widget-picker {
+      position: fixed;
+      inset: 0;
+      z-index: 10060;
+      display: none;
+    }
+    #widget-picker.open { display: flex; align-items: flex-start; justify-content: center; padding-top: calc(var(--topbar-h) + 3rem); }
+    #widget-picker-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(5,4,4,0.72);
+    }
+    #widget-picker-card {
+      position: relative;
+      z-index: 1;
+      width: calc(100% - 3rem);
+      max-width: 340px;
+      background: #0e0c0b;
+      border: .5px solid rgba(224,85,64,0.3);
+      padding: 1.2rem 1rem;
+    }
+    .widget-picker-title {
+      font-family: 'Heading Now Medium', sans-serif;
+      font-size: 8px;
+      letter-spacing: .28em;
+      color: var(--dust);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: .7;
+    }
+    .widget-picker-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .65rem 0;
+      border-bottom: .5px solid var(--faint);
+      cursor: pointer;
+    }
+    .widget-picker-item:last-child { border-bottom: none; }
+    .widget-picker-item-name {
+      font-family: 'Heading Now Book Italic', sans-serif;
+      font-size: 15px;
+      letter-spacing: .05em;
+      color: var(--ink);
+    }
+    .widget-picker-item-desc {
+      font-size: 9px;
+      color: var(--dust);
+      letter-spacing: .03em;
+      opacity: .7;
+      margin-top: .15rem;
+    }
+    .widget-picker-item-action {
+      font-family: 'Heading Now Medium', sans-serif;
+      font-size: 7px;
+      letter-spacing: .2em;
+      padding: .28rem .55rem;
+      border: .5px solid rgba(193,184,173,0.25);
+      background: transparent;
+      color: var(--dust);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .widget-picker-item-action:hover { border-color: var(--signal); color: var(--signal); }
+    .widget-picker-item-action.added {
+      border-color: rgba(193,184,173,0.12);
+      color: rgba(193,184,173,0.3);
+      cursor: default;
+    }
+    #widget-picker-close {
+      display: block;
+      margin-top: 1rem;
+      width: 100%;
+      background: transparent;
+      border: .5px solid rgba(193,184,173,0.15);
+      color: var(--dust);
+      font-family: 'Heading Now Medium', sans-serif;
+      font-size: 7px;
+      letter-spacing: .22em;
+      padding: .5rem 0;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: border-color .15s, color .15s;
+    }
+    #widget-picker-close:hover { border-color: var(--signal); color: var(--signal); }
+
+    /* Widget container + individual widgets */
+    #widget-zone {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .sidebar-widget {
+      padding: 1.1rem 0 1rem;
+      border-top: .5px solid var(--faint);
+      position: relative;
+      touch-action: none;
+    }
+    .sidebar-widget.dragging {
+      opacity: .45;
+      background: rgba(224,85,64,0.04);
+    }
+    .sidebar-widget.drag-over-top {
+      border-top-color: var(--signal);
+    }
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .6rem;
+      gap: .5rem;
+    }
+    .widget-label {
+      font-family: 'Heading Now Medium', sans-serif;
+      font-size: 8px;
+      letter-spacing: .28em;
+      color: var(--dust);
+      text-transform: uppercase;
+      opacity: .6;
+      flex: 1;
+    }
+    .widget-drag-handle {
+      color: var(--dust);
+      opacity: .3;
+      font-size: 11px;
+      cursor: grab;
+      padding: 0 .15rem;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .widget-drag-handle:active { cursor: grabbing; opacity: .7; }
+    .widget-remove-btn {
+      background: none;
+      border: none;
+      color: var(--dust);
+      opacity: .25;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0 .1rem;
+      line-height: 1;
+      transition: opacity .15s, color .15s;
+      flex-shrink: 0;
+    }
+    .widget-remove-btn:hover { opacity: .8; color: var(--signal); }
+
+
+    /* ── 5-day forecast widget ───────────────────────────────────────── */
+    .fiveday-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem 0;
+      border-bottom: .5px solid var(--faint);
+      font-size: 11px;
+    }
+    .fiveday-row:last-child { border-bottom: none; }
+    .fiveday-day {
+      width: 28px;
+      font-size: 9px;
+      letter-spacing: .08em;
+      color: var(--dust);
+      opacity: .7;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .fiveday-icon { width: 22px; text-align: center; flex-shrink: 0; }
+    .fiveday-desc {
+      flex: 1;
+      color: var(--dust);
+      font-size: 9px;
+      letter-spacing: .02em;
+      opacity: .8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fiveday-temps {
+      font-size: 10px;
+      color: var(--ink);
+      letter-spacing: .03em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .fiveday-lo { opacity: .45; }
+
+    /* ── Moon widget ─────────────────────────────────────────────────── */
+    .moon-phase-name {
+      font-family: 'Heading Now Book Italic', sans-serif;
+      font-size: 18px;
+      letter-spacing: .05em;
+      color: var(--ink);
+      margin-bottom: .3rem;
+    }
+    .moon-meta {
+      font-size: 10px;
+      color: var(--dust);
+      letter-spacing: .03em;
+      line-height: 1.8;
+      opacity: .8;
+      margin-bottom: .65rem;
+    }
+    .moon-meta span { color: var(--ink); opacity: 1; }
+    .moon-sign-line {
+      font-size: 11px;
+      font-style: italic;
+      color: var(--dust);
+      line-height: 1.75;
+      letter-spacing: .02em;
+    }
+    .moon-sign-line .moon-sign-name { color: var(--signal); font-style: normal; }
 
     /* ── Weather widget ───────────────────────────────────────────────── */
     .wx-section-label {
@@ -1016,6 +1254,11 @@
         <!-- ── Day title ── -->
         <div class="sidebar-day-title" id="sidebar-day-title"></div>
 
+        <!-- ── Add widget bar ── -->
+        <div id="widget-add-bar">
+          <button id="widget-add-btn" onclick="widgetPickerOpen()">+ ADD WIDGET</button>
+        </div>
+
         <!-- ── Weather ── -->
         <div class="wx-section-label">weather</div>
 
@@ -1049,8 +1292,12 @@
           <div class="horo-section-label">daily horoscope</div>
           <div id="horo-sign-name"></div>
           <div id="horo-text">loading…</div>
-        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        </div>
 
+        <!-- ── User widgets ── -->
+        <div id="widget-zone"></div>
+
+        <div style="height:3rem"></div>
       </div>
     </div>
     <div class="sidebar-pull-hint"></div>
@@ -1118,6 +1365,17 @@
   <div style="display:none">
     <div id="footer-coords"></div>
     <div id="footer-station"></div>
+  </div>
+
+  
+  <!-- Widget picker modal -->
+  <div id="widget-picker">
+    <div id="widget-picker-backdrop" onclick="widgetPickerClose()"></div>
+    <div id="widget-picker-card">
+      <div class="widget-picker-title">add widget</div>
+      <div id="widget-picker-list"></div>
+      <button id="widget-picker-close" onclick="widgetPickerClose()">CLOSE</button>
+    </div>
   </div>
 
   <audio id="raud"></audio>
@@ -1880,13 +2138,19 @@
     const lo = today.mintempF ? Math.round(today.mintempF) + '°F' : null;
     const hilo = (hi && lo) ? `${hi} ↑  ${lo} ↓` : '';
 
-    // Hourly — wttr gives 3-hour slots 3 hour weather
-    const todaySlots = (today.hourly || []);
+    // Hourly — wttr gives 3-hour slots; pull 8 slots (24h) across midnight
+    const todaySlots    = (today.hourly || []);
+    const tomorrowSlots = (d.weather?.[1]?.hourly || []).map(h => ({ ...h, _nextDay: true }));
+    const allSlots      = [...todaySlots, ...tomorrowSlots];
     const now = new Date();
     const curH = now.getHours();
-    const hourly = todaySlots
-      .filter(h => parseInt(h.time) / 100 >= curH)
-      .slice(0, 6)
+    const hourly = allSlots
+      .filter(h => {
+        const hh = parseInt(h.time) / 100;
+        // today: only slots from current hour onward; tomorrow: all slots
+        return h._nextDay || hh >= curH;
+      })
+      .slice(0, 8)
       .map(h => {
         const hCode = WTTR_TO_WMO[parseInt(h.weatherCode)] ?? 0;
         const hh = parseInt(h.time) / 100;
@@ -1911,7 +2175,7 @@
       `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m` +
       `&hourly=temperature_2m,weather_code` +
       `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
-      `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2`;
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=6`;
     const r = await fetch(url);
     if(!r.ok) throw new Error('open-meteo ' + r.status);
     const d = await r.json();
@@ -1936,7 +2200,7 @@
         if(new Date(hourly_d.time[i]) >= nowDate) { startIdx = i; break; }
       }
     }
-    const hourly = (hourly_d.time || []).slice(startIdx, startIdx + 6).map((t, i) => {
+    const hourly = (hourly_d.time || []).slice(startIdx, startIdx + 8).map((t, i) => {
       const idx = startIdx + i;
       const hCode = hourly_d.weather_code[idx] ?? 0;
       const hDate = new Date(t);
@@ -2158,5 +2422,296 @@
 
 <script src="radio.js"></script>
   <script src="star-chart.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+  <script>
+  // ═══════════════════════════════════════════════════════════════════════
+  // SUBLUNA WIDGET ENGINE
+  // ═══════════════════════════════════════════════════════════════════════
+  const WIDGET_STORAGE_KEY = 'subluna_widgets_v1';
+
+  // ── Registry of all available widgets ──────────────────────────────────
+  const WIDGET_REGISTRY = [
+    {
+      id: 'moon-phase',
+      name: 'Moon Phase',
+      description: 'Phase, illumination, rise/set, sign + meaning',
+      render: renderMoonWidget,
+    },
+    {
+      id: '5day-forecast',
+      name: '5-Day Forecast',
+      description: 'Daily high/low and conditions for the next 5 days',
+      render: renderFiveDayWidget,
+    },
+    // future widgets go here
+  ];
+
+  // ── Persistence ────────────────────────────────────────────────────────
+  function widgetLoadOrder() {
+    try { return JSON.parse(localStorage.getItem(WIDGET_STORAGE_KEY) || '[]'); }
+    catch(_) { return []; }
+  }
+  function widgetSaveOrder(ids) {
+    localStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify(ids));
+  }
+
+  // ── Picker ─────────────────────────────────────────────────────────────
+  function widgetPickerOpen() {
+    const picker = document.getElementById('widget-picker');
+    const list   = document.getElementById('widget-picker-list');
+    if (!picker || !list) return;
+    const active = widgetLoadOrder();
+    list.innerHTML = '';
+    WIDGET_REGISTRY.forEach(w => {
+      const isAdded = active.includes(w.id);
+      const item = document.createElement('div');
+      item.className = 'widget-picker-item';
+      item.innerHTML = `
+        <div>
+          <div class="widget-picker-item-name">${w.name}</div>
+          <div class="widget-picker-item-desc">${w.description}</div>
+        </div>
+        <button class="widget-picker-item-action${isAdded ? ' added' : ''}"
+          onclick="${isAdded ? `widgetRemove('${w.id}')` : `widgetAdd('${w.id}')`}; widgetPickerOpen()">
+          ${isAdded ? 'REMOVE' : 'ADD'}
+        </button>`;
+      list.appendChild(item);
+    });
+    picker.classList.add('open');
+  }
+  function widgetPickerClose() {
+    const picker = document.getElementById('widget-picker');
+    if (picker) picker.classList.remove('open');
+  }
+
+  // ── Add / remove ───────────────────────────────────────────────────────
+  function widgetAdd(id) {
+    const order = widgetLoadOrder();
+    if (order.includes(id)) return;
+    order.push(id);
+    widgetSaveOrder(order);
+    widgetRenderAll();
+  }
+  function widgetRemove(id) {
+    const order = widgetLoadOrder().filter(x => x !== id);
+    widgetSaveOrder(order);
+    widgetRenderAll();
+  }
+
+  // ── Render all active widgets ──────────────────────────────────────────
+  function widgetRenderAll() {
+    const zone = document.getElementById('widget-zone');
+    if (!zone) return;
+    zone.innerHTML = '';
+    const order = widgetLoadOrder();
+    order.forEach(id => {
+      const def = WIDGET_REGISTRY.find(w => w.id === id);
+      if (!def) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'sidebar-widget';
+      wrapper.dataset.widgetId = id;
+      wrapper.innerHTML = `
+        <div class="widget-header">
+          <span class="widget-label">${def.name}</span>
+          <span class="widget-drag-handle" title="drag to reorder">⠿</span>
+          <button class="widget-remove-btn" onclick="widgetRemove('${id}')" title="remove">✕</button>
+        </div>
+        <div class="widget-body"></div>`;
+      zone.appendChild(wrapper);
+      def.render(wrapper.querySelector('.widget-body'));
+    });
+    widgetInitDrag();
+  }
+
+  // ── Drag-to-reorder ────────────────────────────────────────────────────
+  function widgetInitDrag() {
+    const zone = document.getElementById('widget-zone');
+    if (!zone) return;
+    let dragged = null;
+
+    zone.querySelectorAll('.widget-drag-handle').forEach(handle => {
+      const widget = handle.closest('.sidebar-widget');
+
+      handle.addEventListener('pointerdown', e => {
+        e.stopPropagation(); // don't trigger sidebar swipe
+        dragged = widget;
+        widget.classList.add('dragging');
+        handle.setPointerCapture(e.pointerId);
+      });
+
+      handle.addEventListener('pointermove', e => {
+        if (!dragged) return;
+        e.preventDefault();
+        // find which widget we're hovering over
+        const els = [...zone.querySelectorAll('.sidebar-widget:not(.dragging)')];
+        els.forEach(el => el.classList.remove('drag-over-top'));
+        const target = els.find(el => {
+          const r = el.getBoundingClientRect();
+          return e.clientY >= r.top && e.clientY < r.bottom;
+        });
+        if (target) target.classList.add('drag-over-top');
+      });
+
+      handle.addEventListener('pointerup', e => {
+        if (!dragged) return;
+        const els = [...zone.querySelectorAll('.sidebar-widget:not(.dragging)')];
+        const target = els.find(el => el.classList.contains('drag-over-top'));
+        els.forEach(el => el.classList.remove('drag-over-top'));
+        dragged.classList.remove('dragging');
+
+        if (target) {
+          // reorder in DOM
+          zone.insertBefore(dragged, target);
+          // persist new order
+          const newOrder = [...zone.querySelectorAll('.sidebar-widget')].map(el => el.dataset.widgetId);
+          widgetSaveOrder(newOrder);
+        }
+        dragged = null;
+      });
+    });
+  }
+
+  // ── Init on sidebar open ───────────────────────────────────────────────
+  // Hook into sidebarSetOpen — render widgets first time sidebar opens
+  let _widgetsInited = false;
+  const _origSidebarSetOpen = sidebarSetOpen;
+  sidebarSetOpen = function(open) {
+    _origSidebarSetOpen(open);
+    if (open && !_widgetsInited) {
+      _widgetsInited = true;
+      widgetRenderAll();
+    }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // MOON PHASE WIDGET
+  // ═══════════════════════════════════════════════════════════════════════
+  const MOON_SIGNS = [
+    { name: 'Aries',       sym: '♈', energy: 'bold, impulsive',      spell: 'new beginnings and courage',       garden: 'plant above-ground crops' },
+    { name: 'Taurus',      sym: '♉', energy: 'steady, sensual',      spell: 'abundance and earth magic',        garden: 'plant root vegetables' },
+    { name: 'Gemini',      sym: '♊', energy: 'quick, restless',      spell: 'communication and travel',         garden: 'harvest and gather herbs' },
+    { name: 'Cancer',      sym: '♋', energy: 'intuitive, receptive', spell: 'home, family and dream work',      garden: 'water and tend seedlings' },
+    { name: 'Leo',         sym: '♌', energy: 'builds',               spell: 'protection and elemental work',    garden: 'feed plants, continue sowing' },
+    { name: 'Virgo',       sym: '♍', energy: 'precise, healing',     spell: 'healing and purification',         garden: 'weed, cultivate, harvest' },
+    { name: 'Libra',       sym: '♎', energy: 'harmonizing',          spell: 'balance, beauty and partnership',  garden: 'plant flowers and vines' },
+    { name: 'Scorpio',     sym: '♏', energy: 'deep, transforming',   spell: 'shadow work and transformation',   garden: 'plant bulbs and root crops' },
+    { name: 'Sagittarius', sym: '♐', energy: 'expansive, seeking',   spell: 'vision, luck and expansion',       garden: 'harvest seeds for planting' },
+    { name: 'Capricorn',   sym: '♑', energy: 'grounding, patient',   spell: 'long-term goals and discipline',   garden: 'plant root crops and prune' },
+    { name: 'Aquarius',    sym: '♒', energy: 'electric, detached',   spell: 'community and innovation',         garden: 'cultivate soil, add compost' },
+    { name: 'Pisces',      sym: '♓', energy: 'liminal, dissolving',  spell: 'spiritual work and release',       garden: 'water deeply, rest the soil' },
+  ];
+
+  const MOON_PHASE_NAMES = [
+    { max: 0.033, name: 'New Moon' },
+    { max: 0.25,  name: 'Waxing Crescent' },
+    { max: 0.283, name: 'First Quarter' },
+    { max: 0.5,   name: 'Waxing Gibbous' },
+    { max: 0.533, name: 'Full Moon' },
+    { max: 0.75,  name: 'Waning Gibbous' },
+    { max: 0.783, name: 'Last Quarter' },
+    { max: 1.0,   name: 'Waning Crescent' },
+  ];
+
+  function moonPhaseName(phase) {
+    return (MOON_PHASE_NAMES.find(p => phase <= p.max) || { name: 'Waning Crescent' }).name;
+  }
+
+  function moonSign(date) {
+    // Moon moves ~13.2°/day. Use a known New Moon in Aries as epoch.
+    // Jan 29 2025 12:36 UTC = New Moon ~0° Aries
+    const EPOCH = Date.UTC(2025, 0, 29, 12, 36);
+    const CYCLE_MS = 29.53058867 * 24 * 60 * 60 * 1000;
+    const SIGN_DEG = 30;
+    const elapsed = date.getTime() - EPOCH;
+    const cyclePos = ((elapsed % CYCLE_MS) + CYCLE_MS) % CYCLE_MS;
+    const moonLon = (cyclePos / CYCLE_MS) * 360;
+    const signIndex = Math.floor(moonLon / SIGN_DEG) % 12;
+    return MOON_SIGNS[signIndex];
+  }
+
+  function fmtTime(date) {
+    if (!date || isNaN(date)) return '—';
+    let h = date.getHours(), m = date.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+  }
+
+  function renderMoonWidget(container) {
+    if (!window.SunCalc) { container.innerHTML = '<div class="moon-meta">suncalc not loaded</div>'; return; }
+    const user = readSublunaUser();
+    const now  = new Date();
+
+    // Use user's weather location for rise/set, fall back to 0,0
+    const lat = user?.weather?.lat || 0;
+    const lon = user?.weather?.lon || 0;
+
+    const moonIllum  = SunCalc.getMoonIllumination(now);
+    const moonPos    = SunCalc.getMoonPosition(now, lat, lon);
+    const moonTimes  = SunCalc.getMoonTimes(now, lat, lon);
+
+    const phase      = moonIllum.phase;          // 0–1
+    const illumPct   = Math.round(moonIllum.fraction * 100);
+    const phaseName  = moonPhaseName(phase);
+    const distKm     = Math.round(moonPos.distance).toLocaleString();
+    const altDeg     = Math.round(moonPos.altitude * 180 / Math.PI * 10) / 10;
+    const azDeg      = Math.round(moonPos.azimuth  * 180 / Math.PI + 180); // convert to 0–360
+    const rise       = moonTimes.rise ? fmtTime(moonTimes.rise) : '—';
+    const set        = moonTimes.set  ? fmtTime(moonTimes.set)  : '—';
+    const sign       = moonSign(now);
+
+    container.innerHTML = `
+      <div class="moon-phase-name">${phaseName}</div>
+      <div class="moon-meta">
+        <span>${illumPct}% illuminated</span> · rise <span>${rise}</span> · set <span>${set}</span> · <span>${distKm} km</span> · <span>${altDeg}°</span> alt · <span>${azDeg}°</span> az
+      </div>
+      <div class="moon-sign-line">
+        moon in <span class="moon-sign-name">${sign.name} ${sign.sym}</span> · ${sign.energy} · favors ${sign.spell}. ${sign.garden}. a good day to tend what is growing.
+      </div>`;
+  }
+
+  // ── 5-DAY FORECAST WIDGET ──────────────────────────────────────────────
+  async function renderFiveDayWidget(container) {
+    const user = readSublunaUser();
+    const lat  = user?.weather?.lat;
+    const lon  = user?.weather?.lon;
+    if (!lat || !lon) { container.innerHTML = '<div class="moon-meta">no location set</div>'; return; }
+
+    container.innerHTML = '<div class="moon-meta">loading…</div>';
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+        `&temperature_unit=fahrenheit&timezone=auto&forecast_days=6`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      const daily = d.daily || {};
+      const DAY_LABELS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+      // skip index 0 (today — already shown in current conditions), show next 5
+      const rows = (daily.time || []).slice(1, 6).map((dateStr, i) => {
+        const idx  = i + 1;
+        const code = daily.weather_code[idx] ?? 0;
+        const hi   = daily.temperature_2m_max[idx] != null ? Math.round(daily.temperature_2m_max[idx]) + '°' : '—';
+        const lo   = daily.temperature_2m_min[idx] != null ? Math.round(daily.temperature_2m_min[idx]) + '°' : '—';
+        const icon = WX_ICONS[code] || '—';
+        const desc = WX_DESC[code] || '';
+        const dayLabel = DAY_LABELS[new Date(dateStr + 'T12:00:00').getDay()];
+        return `<div class="fiveday-row">
+          <span class="fiveday-day">${dayLabel}</span>
+          <span class="fiveday-icon">${icon}</span>
+          <span class="fiveday-desc">${desc}</span>
+          <span class="fiveday-temps">${hi} <span class="fiveday-lo">${lo}</span></span>
+        </div>`;
+      });
+      container.innerHTML = rows.join('');
+    } catch(e) {
+      container.innerHTML = `<div class="moon-meta">could not load — ${e.message}</div>`;
+    }
+  }
+
+  </script>
+
 </body>
 </html>
