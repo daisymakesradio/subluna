@@ -1,3 +1,9 @@
-node_modules/
-.env
+# Backups and scratch copies — keep these local only
+/BACKUPS/
+index*copy*.html
+index*(*).html
+*.bak
+*.tmp
+
+# OS junk
 .DS_Store
