@@ -687,6 +687,35 @@
       scrollbar-width: none;
     }
     #wx-hourly::-webkit-scrollbar { display: none; }
+
+    /* ── Horoscope ────────────────────────────────────────────────── */
+    #horo-section {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: .5px solid var(--faint);
+      display: none;
+    }
+    .horo-section-label {
+      font-size: 8px;
+      letter-spacing: .22em;
+      color: var(--dust);
+      text-transform: uppercase;
+      margin-bottom: .6rem;
+      opacity: .7;
+    }
+    #horo-sign-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: .85rem;
+      letter-spacing: .18em;
+      color: var(--gold);
+      margin-bottom: .5rem;
+    }
+    #horo-text {
+      font-size: 11px;
+      line-height: 1.85;
+      color: var(--dust);
+    }
+
     .wx-hr {
       display: flex;
       flex-direction: column;
@@ -992,6 +1021,13 @@
           <div id="wx-desc"></div>
           <hr class="wx-divider">
           <div id="wx-hourly"></div>
+        </div>
+
+        <!-- ── Daily Horoscope ── -->
+        <div id="horo-section">
+          <div class="horo-section-label">daily horoscope</div>
+          <div id="horo-sign-name"></div>
+          <div id="horo-text">loading…</div>
         </div>
 
       </div>
@@ -1894,7 +1930,76 @@
       }
     });
   })();
-  </script>
+
+  // ── DAILY HOROSCOPE ───────────────────────────────────────────────────────
+  const HORO_PROXY = 'https://signal-hazel-mu.vercel.app';
+  let _horoCache = {};
+
+  function getSunSignFromDate(dateStr) {
+    // dateStr format: MM/DD/YYYY
+    const parts = dateStr.split('/');
+    if (parts.length < 2) return null;
+    const m = parseInt(parts[0], 10);
+    const d = parseInt(parts[1], 10);
+    if (!m || !d) return null;
+    if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return 'aries';
+    if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return 'taurus';
+    if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return 'gemini';
+    if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return 'cancer';
+    if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return 'leo';
+    if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return 'virgo';
+    if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return 'libra';
+    if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return 'scorpio';
+    if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return 'sagittarius';
+    if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return 'capricorn';
+    if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return 'aquarius';
+    return 'pisces';
+  }
+
+  async function loadHoroscope() {
+    const user = readSublunaUser();
+    if (!user || !user.birth || !user.birth.date) return;
+    const sign = getSunSignFromDate(user.birth.date);
+    if (!sign) return;
+
+    const section = document.getElementById('horo-section');
+    const signEl  = document.getElementById('horo-sign-name');
+    const textEl  = document.getElementById('horo-text');
+    if (!section || !textEl) return;
+
+    section.style.display = 'block';
+    if (signEl) signEl.textContent = sign.toUpperCase();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `${sign}:daily:${today}`;
+    if (_horoCache[cacheKey]) { textEl.textContent = _horoCache[cacheKey]; return; }
+
+    textEl.textContent = 'loading…';
+    try {
+      const r = await fetch(`${HORO_PROXY}/api/horoscope?sign=${sign}&period=daily`);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      const text = data?.data?.horoscope || data?.horoscope || 'no reading available';
+      _horoCache[cacheKey] = text;
+      textEl.textContent = text;
+    } catch(e) {
+      textEl.textContent = 'could not load horoscope — ' + e.message;
+    }
+  }
+
+  // Hook into sidebar open to lazy-load horoscope
+  let _horoLoaded = false;
+  const _origSidebarToggle = window.sidebarToggle;
+  function sidebarToggleWithHoro() {
+    if (typeof _origSidebarToggle === 'function') _origSidebarToggle();
+    if (!_horoLoaded) { _horoLoaded = true; loadHoroscope(); }
+  }
+  // Override after DOM ready so radio.js sidebarToggle is captured
+  document.addEventListener('DOMContentLoaded', () => {
+    const tab = document.getElementById('sidebar-tab');
+    if (tab) tab.onclick = sidebarToggleWithHoro;
+  });
+  
 
   <script src="radio.js"></script>
   <script src="star-chart.js"></script>
