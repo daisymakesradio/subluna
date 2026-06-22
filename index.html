@@ -474,7 +474,7 @@
       position: fixed;
       top: var(--topbar-h);
       left: 0;
-      width: calc(95vw - 35px); /* full page minus tab width */
+      width: calc(99vw - 1px); /* full page minus tab width */
       height: calc(100vh - var(--topbar-h));
       z-index: 10010; /* above bg, below radio bar (10020) */
       display: flex;
@@ -1640,8 +1640,9 @@
   // since they all fire the same pointer events.
   (function () {
     const sidebar = document.getElementById('subluna-sidebar');
-    const EDGE_ZONE = 40;       // px from left edge that counts as "starting a swipe to open"
-    const DRAG_THRESHOLD = 60;  // px of horizontal movement needed to trigger open/close
+    const EDGE_ZONE = 70;        // px from left edge that counts as "starting a swipe to open" (wider = easier to grab on phone)
+    const DRAG_THRESHOLD = 0.35; // fraction of sidebar width dragged = commit, even without a fast flick
+    const FLICK_VELOCITY = 0.5;  // px/ms — a quick flick at/above this speed commits regardless of distance
     const sidebarWidth = () => sidebar.getBoundingClientRect().width;
 
     let dragging = false;
@@ -1649,6 +1650,9 @@
     let startY = 0;
     let currentX = 0;
     let startedOpen = false;
+    let lastX = 0;
+    let lastT = 0;
+    let velocity = 0; // px/ms, positive = moving right
 
     function onPointerDown(e) {
       // Ignore multi-touch / right-click etc.
@@ -1661,8 +1665,10 @@
 
       dragging = true;
       startedOpen = isOpen;
-      startX = currentX = e.clientX;
+      startX = currentX = lastX = e.clientX;
       startY = e.clientY;
+      lastT = e.timeStamp;
+      velocity = 0;
       sidebar.style.transition = 'none';
     }
 
@@ -1673,21 +1679,27 @@
       const dy = e.clientY - startY;
 
       // If the gesture is more vertical than horizontal, bail out —
-      // this was probably a scroll, not a swipe.
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 15) {
+      // this was probably a scroll, not a swipe. Loose ratio so diagonal
+      // flicks still register, like a real swipe gesture.
+      if (Math.abs(dy) > Math.abs(dx) * 1.3 && Math.abs(dy) > 20) {
         dragging = false;
         sidebar.style.transition = '';
         sidebar.style.transform = '';
         return;
       }
 
+      // Track instantaneous velocity so a quick flick can commit the
+      // gesture even if the finger hasn't moved very far yet.
+      const dt = e.timeStamp - lastT;
+      if (dt > 0) velocity = (currentX - lastX) / dt;
+      lastX = currentX;
+      lastT = e.timeStamp;
+
       const w = sidebarWidth();
       let translate;
       if (startedOpen) {
-        // dragging left, from 0 toward -100%
         translate = Math.min(0, Math.max(-w, dx));
       } else {
-        // dragging right, from -100% toward 0
         translate = Math.min(0, Math.max(-w, -w + dx));
       }
       sidebar.style.transform = `translateX(${translate}px)`;
@@ -1696,15 +1708,30 @@
     function onPointerUp() {
       if (!dragging) return;
       dragging = false;
+
+      const w = sidebarWidth();
+      const dx = currentX - startX;
+      const distanceRatio = Math.abs(dx) / w;
+
+      let shouldOpen = startedOpen; // default: snap back to where it started
+
+      if (startedOpen) {
+        // Closing: flicking left fast, OR dragged left past the threshold
+        if ((velocity < -FLICK_VELOCITY && dx < 0) || (dx < 0 && distanceRatio > DRAG_THRESHOLD)) {
+          shouldOpen = false;
+        }
+      } else {
+        // Opening: flicking right fast, OR dragged right past the threshold
+        if ((velocity > FLICK_VELOCITY && dx > 0) || (dx > 0 && distanceRatio > DRAG_THRESHOLD)) {
+          shouldOpen = true;
+        }
+      }
+
+      // Re-enable the transition so the finish feels like a smooth snap,
+      // matching the card-swipe feel rather than an abrupt jump.
       sidebar.style.transition = '';
       sidebar.style.transform = '';
-
-      const dx = currentX - startX;
-      if (startedOpen) {
-        if (dx < -DRAG_THRESHOLD) sidebarSetOpen(false);
-      } else {
-        if (dx > DRAG_THRESHOLD) sidebarSetOpen(true);
-      }
+      sidebarSetOpen(shouldOpen);
     }
 
     document.addEventListener('pointerdown', onPointerDown);
