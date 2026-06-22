@@ -1,0 +1,151 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Bold;\f1\froman\fcharset0 Times-Roman;\f2\fmodern\fcharset0 Courier;
+\f3\froman\fcharset0 Times-Italic;\f4\fmodern\fcharset0 Courier-Bold;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid101\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{circle\}}{\leveltext\leveltemplateid102\'01\uc0\u9702 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listname ;}\listid2}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f0\b\fs24 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Task: Make the Three.js decorative moon reflect the real-time moon phase
+\f1\b0 \
+
+\f0\b Context:
+\f1\b0  
+\f2\fs26 index.html
+\f1\fs24  contains a decorative, auto-rotating Three.js scene (
+\f2\fs26 #bg-moon-wrap
+\f1\fs24  / 
+\f2\fs26 #bg-moon-canvas
+\f1\fs24 ) with 
+\f0\b two bodies now, not one
+\f1\b0 : a moon (
+\f2\fs26 SphereGeometry
+\f1\fs24 , real NASA diffuse texture reused as a bump map \'97 no longer the old procedurally-drawn canvas texture) and a distant Earth (
+\f2\fs26 earthGroup
+\f1\fs24 , with its own diffuse/normal/specular/night-lights textures, a separate cloud layer, and a fresnel atmosphere shell). Both share 
+\f0\b one
+\f1\b0  
+\f2\fs26 THREE.AmbientLight
+\f1\fs24  and 
+\f0\b one
+\f1\b0  
+\f2\fs26 THREE.DirectionalLight
+\f1\fs24  (
+\f2\fs26 sun
+\f1\fs24 ), currently fixed at 
+\f2\fs26 position.set(4, 1.5, 3)
+\f1\fs24 . Rotation speeds are now three separate constants: 
+\f2\fs26 MOON_SPIN
+\f1\fs24 , 
+\f2\fs26 EARTH_SPIN
+\f1\fs24 , 
+\f2\fs26 CLOUD_SPIN
+\f1\fs24  (no more single 
+\f2\fs26 SPIN_SPEED
+\f1\fs24 , and no 
+\f2\fs26 rGlobe
+\f1\fs24  \'97 that was leftover naming from an earlier backup file, doesn't exist in this script). All of this lives in the inline 
+\f2\fs26 <script>
+\f1\fs24  block right after the moon/stars canvas markup. Note: stars now also have a separate, fully independent 2D-canvas starfield (
+\f2\fs26 #bg-stars-canvas
+\f1\fs24 ) behind everything \'97 don't touch that, it has nothing to do with this task.\
+
+\f0\b Goal:
+\f1\b0  same as before \'97 sweep the directional light's position based on real-world moon phase so the terminator on the moon matches new/crescent/quarter/gibbous/full, etc.\
+
+\f0\b Important new consideration \'97 shared light affects Earth too:
+\f1\b0  because the moon and Earth now share the same 
+\f2\fs26 sun
+\f1\fs24  light, swinging it around to animate moon phase will 
+\f3\i \strokec2 also
+\f1\i0 \strokec2  change which side of Earth looks lit. Before wiring this up, decide:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0
+\f0\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Option A (simplest):
+\f1\b0  accept that Earth's lit side will subtly shift in sync with the moon's phase light. Physically this is roughly defensible (same sun lighting both bodies in real life) but the magnitude/speed of the sweep may look wrong for Earth specifically since Earth's actual day/night terminator moves on a ~24hr cycle, not a ~29.5 day one.\
+\ls1\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Option B (cleaner):
+\f1\b0  add a 
+\f0\b second, moon-only 
+\f4\fs26 DirectionalLight
+\f1\b0\fs24  (only added to a moon-specific group/layer, or simply not added to 
+\f2\fs26 earth
+\f1\fs24 's lighting via 
+\f2\fs26 layers
+\f1\fs24 ), so phase-sweeping affects only the moon while Earth keeps its current fixed/independent light. This is probably the right call if Earth's lighting should stay stable. Flag this decision to confirm before implementing, don't just assume.\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f0\b \cf0 \strokec2 Steps (mostly unchanged, ported to the new structure):
+\f1\b0 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	1	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Add a moon-phase calculation function (pure JS, no API key \'97 same approach as 
+\f2\fs26 MOON_PHASES_JS
+\f1\fs24 /
+\f2\fs26 phaseAngle
+\f1\fs24  math used elsewhere in this project's backups). Takes a 
+\f2\fs26 Date
+\f1\fs24 , returns 
+\f2\fs26 phaseAngle
+\f1\fs24  0\'96360\'b0 (0\'b0 = new moon, 180\'b0 = full moon, standard synodic convention).\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	2	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Map 
+\f2\fs26 phaseAngle
+\f1\fs24  to light position, orbiting around the 
+\f0\b moon mesh
+\f1\b0  (not 
+\f2\fs26 rGlobe
+\f1\fs24  \'97 reference the actual 
+\f2\fs26 moon
+\f1\fs24  variable in this file) in the XZ plane:\
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls2\ilvl1\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \uc0\u8776 180\'b0 (full): light roughly coincident with camera's view direction.\
+\ls2\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \uc0\u8776 0\'b0 (new): light roughly opposite camera, visible face mostly dark.\
+\ls2\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Sweep azimuthally between those for intermediate phases.\
+\ls2\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Same trig approach as before: 
+\f2\fs26 set(R * sin(rad), keep_some_elevation, R * cos(rad))
+\f1\fs24 , tune by eye against reference photos.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	3	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Wire it up:\
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls2\ilvl1\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Compute today's phase angle on load, position the light once before first render.\
+\ls2\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Re-compute every 12\'9660 min (or once at local midnight) \'97 phase doesn't need per-frame updates.\
+\ls2\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Don't touch 
+\f2\fs26 moon.rotation.y += MOON_SPIN
+\f1\fs24  (renamed from 
+\f2\fs26 SPIN_SPEED
+\f1\fs24 ) \'97 keep that independent and untouched. Same for 
+\f2\fs26 EARTH_SPIN
+\f1\fs24 /
+\f2\fs26 CLOUD_SPIN
+\f1\fs24 .\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	4	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 No location/geolocation needed \'97 still true, phase angle is observer-independent.\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	5	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Testing: same debug hook idea \'97 
+\f2\fs26 window.setMoonPhaseDebug(angleDegrees)
+\f1\fs24  \'97 to eyeball phases without waiting days. Remove or flag-guard before shipping.\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	6	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Optional/out of scope: terminator tilt by latitude \'97 still skip unless asked.\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0
+\f0\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	7	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 New item:
+\f1\b0  once implemented, sanity-check Earth's appearance at a few different phase angles (0\'b0, 90\'b0, 180\'b0, 270\'b0) to confirm Option A vs B decision produced an acceptable look, since this is the one genuinely new risk introduced by today's Earth addition.\
+}
