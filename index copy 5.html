@@ -775,13 +775,6 @@
       -webkit-appearance: none;
       transition: border-bottom-color .2s;
     }
-    /* iOS Safari auto-zooms the page when a focused input's font-size is
-       under 16px. Bump it up just on small/mobile screens so typing in
-       the login form doesn't trigger that zoom — desktop keeps the
-       smaller, more intentional 11.5px size. */
-    @media (max-width: 600px) {
-      .intro-form-grid input { font-size: 16px; }
-    }
     .intro-form-grid input::placeholder {
       color: rgba(193,184,173,0.35);
       font-style: italic;
@@ -1647,7 +1640,7 @@
   // since they all fire the same pointer events.
   (function () {
     const sidebar = document.getElementById('subluna-sidebar');
-    const EDGE_ZONE = 500;        // px from left edge that counts as "starting a swipe to open" (wider = easier to grab on phone)
+    const EDGE_ZONE = 70;        // px from left edge that counts as "starting a swipe to open" (wider = easier to grab on phone)
     const DRAG_THRESHOLD = 0.35; // fraction of sidebar width dragged = commit, even without a fast flick
     const FLICK_VELOCITY = 0.5;  // px/ms — a quick flick at/above this speed commits regardless of distance
     const sidebarWidth = () => sidebar.getBoundingClientRect().width;
