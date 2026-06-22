@@ -487,7 +487,7 @@
       background: rgba(5, 4, 4, 0.72);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-      border-right: 0.5px solid rgba(224, 85, 64, 0.3);
+/*       border-right: 0.5px solid rgba(224, 85, 64, 0.3); */
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -499,9 +499,9 @@
       top: var(--topbar-h);
       left: 0;
       z-index: 10015;
-      width: 35px;
+      width: 50px;
       height: calc(100vh - var(--topbar-h));
-      background: rgba(20, 6, 5, 0.92);
+      background: rgba(20, 6, 5, 0);
       border-right: 0px solid var(--signal);
       display: flex;
       align-items: center;
@@ -511,7 +511,7 @@
       user-select: none;
     }
     #sidebar-tab:hover {
-      background: rgba(43, 5, 2, 0.453);
+      background: rgba(43, 5, 2, 0);
     }
     body.sidebar-open #sidebar-tab {
       left: calc(100vw - 35px);
