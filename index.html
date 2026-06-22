@@ -472,20 +472,20 @@
     /* ── Left sidebar ─────────────────────────────────────────────────── */
     #subluna-sidebar {
       position: fixed;
-      top: var(--topbar-h);
+      top: 0;
       left: 0;
-      width: calc(99vw - 1px); /* full page minus tab width */
-      height: calc(100vh - var(--topbar-h));
-      z-index: 10010; /* above bg, below radio bar (10020) */
+      width: 100%;
+      height: calc(100vh - var(--bottombar-h));
+      z-index: 10015; /* above bg, below topbar (10020) */
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       background: transparent;
-      transform: translateX(-100%);
+      transform: translateY(-100%);
       transition: transform .3s cubic-bezier(.4, 0, .2, 1);
       pointer-events: none;
     }
     #subluna-sidebar.open {
-      transform: translateX(0);
+      transform: translateY(0);
       pointer-events: auto;
     }
 
@@ -494,13 +494,30 @@
       flex: 1;
       height: 100%;
       position: relative;
-      background: rgba(5, 4, 4, 0.72);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-/*       border-right: 0.5px solid rgba(224, 85, 64, 0.3); */
+      background: rgba(5, 4, 4, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+    }
+
+    /* Pull indicator at bottom of sidebar */
+    .sidebar-pull-hint {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding: .55rem 0 .4rem;
+      background: rgba(5,4,4,0.88);
+    }
+    .sidebar-pull-hint::before {
+      content: '';
+      display: block;
+      width: 36px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(193,184,173,0.22);
     }
 
     /* sidebar-tab removed — sidebar is swipe-only now */
@@ -524,7 +541,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 1.25rem 1rem;
+      padding: calc(var(--topbar-h) + 1.25rem) 1rem 1.25rem;
       scrollbar-width: thin;
       scrollbar-color: var(--faint) transparent;
       position: relative;
@@ -533,6 +550,21 @@
     .sidebar-inner::-webkit-scrollbar { width: 4px; }
     .sidebar-inner::-webkit-scrollbar-track { background: transparent; }
     .sidebar-inner::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+
+    /* Day title inside sidebar */
+    .sidebar-day-title {
+      font-family: 'Futura FW', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      color: var(--dim);
+      line-height: 1;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: .5px solid var(--faint);
+    }
+    .sidebar-day-title span { color: var(--signal); }
 
     /* ── Weather widget ───────────────────────────────────────────────── */
     .wx-section-label {
@@ -710,6 +742,7 @@
       position: fixed;
       inset: 0;
       z-index: 10050;
+      pointer-events: auto; /* block all clicks from reaching sidebar underneath */
     }
     #intro-overlay[hidden] { display: none; }
     #login-gate {
@@ -717,6 +750,7 @@
       inset: 0;
       background: rgba(5,4,4,0.72);
       z-index: 1;
+      pointer-events: auto; /* explicitly capture backdrop clicks */
     }
     #login-card {
       position: fixed;
@@ -966,18 +1000,21 @@
   </div>
 
   <div id="subluna-topbar">
-    <div class="topbar-wordmark" id="subluna-secret-btn" style="cursor:default;user-select:none;" aria-label="day title"></div>
+    <div class="topbar-wordmark" id="subluna-topbar-wordmark" style="cursor:pointer;user-select:none;" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))">SUB<span>L</span>UNA</div>
     <div class="topbar-right">
       <button id="rrefresh" onclick="rRefresh()" style="display:none"><span class="rspinicon">↺</span></button>
       <button id="subluna-logout-btn">LOGOUT</button>
     </div>
   </div>
 
-  <!-- Left collapsible sidebar -->
+  <!-- Top collapsible sidebar -->
   <div id="subluna-sidebar" role="complementary" aria-label="sidebar">
     <div class="sidebar-panel">
       <div class="sidebar-bg-chart" id="sidebar-bg-chart" aria-hidden="true"></div>
       <div class="sidebar-inner">
+
+        <!-- ── Day title ── -->
+        <div class="sidebar-day-title" id="sidebar-day-title"></div>
 
         <!-- ── Weather ── -->
         <div class="wx-section-label">weather</div>
@@ -1016,6 +1053,7 @@
 
       </div>
     </div>
+    <div class="sidebar-pull-hint"></div>
   </div>
   
   <div id="subluna-bottombar" class="collapsed">
@@ -1166,7 +1204,10 @@
   }
 
   function loadRecentUser() {
-    fillIntroUser(readSublunaUser());
+    const data = readSublunaUser() || (() => {
+      try { return JSON.parse(localStorage.getItem(SUBLUNA_USER_KEY + '_backup') || 'null'); } catch(_) { return null; }
+    })();
+    fillIntroUser(data);
     introSetStatus('');
   }
 
@@ -1296,6 +1337,8 @@
   }
 
   function logoutSubluna() {
+    const current = localStorage.getItem(SUBLUNA_USER_KEY);
+    if (current) localStorage.setItem(SUBLUNA_USER_KEY + '_backup', current);
     localStorage.removeItem(SUBLUNA_USER_KEY);
     window.location.reload();
   }
@@ -1372,7 +1415,11 @@
 
     const overlay = document.getElementById('intro-overlay');
     if (overlay) overlay.hidden = false;
-    if (saved) {
+    // Show LOAD RECENT if there's any saved data (active session or post-logout backup)
+    const backup = (() => {
+      try { return JSON.parse(localStorage.getItem(SUBLUNA_USER_KEY + '_backup') || 'null'); } catch(_) { return null; }
+    })();
+    if (saved || backup) {
       const btn = document.getElementById('intro-load-recent-btn');
       if (btn) btn.style.display = 'inline-block';
     }
@@ -1592,10 +1639,9 @@
       ['W','EDNESDAY'],['T','HURSDAY'],['F','RIDAY'],['S','ATURDAY']
     ];
     function setDayTitle(){
-      const el=document.getElementById('subluna-secret-btn');
-      if(!el)return;
       const[hi,rest]=DAYS[new Date().getDay()];
-      el.innerHTML=`<span>${hi}</span>${rest}`;
+      const sidebar=document.getElementById('sidebar-day-title');
+      if(sidebar) sidebar.innerHTML=`<span>${hi}</span>${rest}`;
     }
     setDayTitle();
     const now=new Date();
@@ -1655,38 +1701,44 @@
     }
   }
 
-  // ── Sidebar swipe / drag gesture ────────────────────────────────────────
-  // Works with touch (phone), mouse (desktop "click and drag"), and stylus,
-  // since they all fire the same pointer events.
+  // ── Sidebar swipe / drag gesture (top-down) ────────────────────────────
+  // Swipe down anywhere above the bottombar to open; swipe up to close.
   (function () {
     const sidebar = document.getElementById('subluna-sidebar');
-    const EDGE_ZONE = 500;        // px from left edge that counts as "starting a swipe to open" (wider = easier to grab on phone)
-    const DRAG_THRESHOLD = 0.35; // fraction of sidebar width dragged = commit, even without a fast flick
-    const FLICK_VELOCITY = 0.5;  // px/ms — a quick flick at/above this speed commits regardless of distance
-    const sidebarWidth = () => sidebar.getBoundingClientRect().width;
+    const DRAG_THRESHOLD = 0.28; // fraction of sidebar height to commit
+    const FLICK_VELOCITY = 0.4;  // px/ms
+
+    const sidebarHeight = () => sidebar.getBoundingClientRect().height;
+    const bottombarTop = () => {
+      const bb = document.getElementById('subluna-bottombar');
+      return bb ? bb.getBoundingClientRect().top : window.innerHeight;
+    };
 
     let dragging = false;
-    let startX = 0;
     let startY = 0;
-    let currentX = 0;
+    let startX = 0;
+    let currentY = 0;
     let startedOpen = false;
-    let lastX = 0;
+    let lastY = 0;
     let lastT = 0;
-    let velocity = 0; // px/ms, positive = moving right
+    let velocity = 0; // px/ms, positive = moving down
 
     function onPointerDown(e) {
-      // Ignore multi-touch / right-click etc.
       if (e.pointerType === 'mouse' && e.button !== 0) return;
+      // Don't intercept swipes while the login overlay is showing
+      const overlay = document.getElementById('intro-overlay');
+      if (overlay && !overlay.hidden) return;
 
       const isOpen = sidebar.classList.contains('open');
-      // Only start tracking if: sidebar is open (so we can swipe-close from
-      // anywhere on it), OR the touch starts near the left edge (to swipe-open).
-      if (!isOpen && e.clientX > EDGE_ZONE) return;
+      // Don't start if touch is on or below the bottombar
+      if (e.clientY >= bottombarTop()) return;
+      // When closed, only open if swiping down (checked in move)
+      // When open, allow swipe-up to close from anywhere above bottombar
 
       dragging = true;
       startedOpen = isOpen;
-      startX = currentX = lastX = e.clientX;
-      startY = e.clientY;
+      startY = currentY = lastY = e.clientY;
+      startX = e.clientX;
       lastT = e.timeStamp;
       velocity = 0;
       sidebar.style.transition = 'none';
@@ -1694,61 +1746,57 @@
 
     function onPointerMove(e) {
       if (!dragging) return;
-      currentX = e.clientX;
-      const dx = currentX - startX;
-      const dy = e.clientY - startY;
+      currentY = e.clientY;
+      const dy = currentY - startY;
+      const dx = e.clientX - startX;
 
-      // If the gesture is more vertical than horizontal, bail out —
-      // this was probably a scroll, not a swipe. Loose ratio so diagonal
-      // flicks still register, like a real swipe gesture.
-      if (Math.abs(dy) > Math.abs(dx) * 1.3 && Math.abs(dy) > 20) {
+      // If gesture is more horizontal than vertical, bail — it's a scroll or left-sidebar ghost
+      if (Math.abs(dx) > Math.abs(dy) * 1.3 && Math.abs(dx) > 20) {
         dragging = false;
         sidebar.style.transition = '';
         sidebar.style.transform = '';
         return;
       }
 
-      // Track instantaneous velocity so a quick flick can commit the
-      // gesture even if the finger hasn't moved very far yet.
       const dt = e.timeStamp - lastT;
-      if (dt > 0) velocity = (currentX - lastX) / dt;
-      lastX = currentX;
+      if (dt > 0) velocity = (currentY - lastY) / dt;
+      lastY = currentY;
       lastT = e.timeStamp;
 
-      const w = sidebarWidth();
+      const h = sidebarHeight();
       let translate;
       if (startedOpen) {
-        translate = Math.min(0, Math.max(-w, dx));
+        // Dragging up to close: clamp between -h and 0
+        translate = Math.min(0, Math.max(-h, dy));
       } else {
-        translate = Math.min(0, Math.max(-w, -w + dx));
+        // Dragging down to open: starts at -h, moves toward 0
+        translate = Math.min(0, Math.max(-h, -h + dy));
       }
-      sidebar.style.transform = `translateX(${translate}px)`;
+      sidebar.style.transform = `translateY(${translate}px)`;
     }
 
     function onPointerUp() {
       if (!dragging) return;
       dragging = false;
 
-      const w = sidebarWidth();
-      const dx = currentX - startX;
-      const distanceRatio = Math.abs(dx) / w;
+      const h = sidebarHeight();
+      const dy = currentY - startY;
+      const distanceRatio = Math.abs(dy) / h;
 
-      let shouldOpen = startedOpen; // default: snap back to where it started
+      let shouldOpen = startedOpen;
 
       if (startedOpen) {
-        // Closing: flicking left fast, OR dragged left past the threshold
-        if ((velocity < -FLICK_VELOCITY && dx < 0) || (dx < 0 && distanceRatio > DRAG_THRESHOLD)) {
+        // Close: flick up fast OR dragged up past threshold
+        if ((velocity < -FLICK_VELOCITY && dy < 0) || (dy < 0 && distanceRatio > DRAG_THRESHOLD)) {
           shouldOpen = false;
         }
       } else {
-        // Opening: flicking right fast, OR dragged right past the threshold
-        if ((velocity > FLICK_VELOCITY && dx > 0) || (dx > 0 && distanceRatio > DRAG_THRESHOLD)) {
+        // Open: flick down fast OR dragged down past threshold
+        if ((velocity > FLICK_VELOCITY && dy > 0) || (dy > 0 && distanceRatio > DRAG_THRESHOLD)) {
           shouldOpen = true;
         }
       }
 
-      // Re-enable the transition so the finish feels like a smooth snap,
-      // matching the card-swipe feel rather than an abrupt jump.
       sidebar.style.transition = '';
       sidebar.style.transform = '';
       sidebarSetOpen(shouldOpen);
