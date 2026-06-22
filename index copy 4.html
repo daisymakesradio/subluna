@@ -503,7 +503,40 @@
       overflow: hidden;
     }
 
-    /* sidebar-tab removed — sidebar is swipe-only now */
+    /* Tab / pull handle — full height, always on right edge of sidebar */
+    #sidebar-tab {
+      position: fixed;
+      top: var(--topbar-h);
+      left: 0;
+      z-index: 10015;
+      width: 50px;
+      height: calc(100vh - var(--topbar-h));
+      background: rgba(20, 6, 5, 0);
+      border-right: 0px solid var(--signal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: left .3s cubic-bezier(.4, 0, .2, 1), background .15s;
+      user-select: none;
+    }
+    #sidebar-tab:hover {
+      background: rgba(43, 5, 2, 0);
+    }
+    body.sidebar-open #sidebar-tab {
+      left: calc(95vw - 35px);
+    }
+    .sidebar-tab-arrow {
+      font-size: 13px;
+      color: var(--signal);
+      line-height: 1;
+      transition: transform .3s ease;
+      writing-mode: vertical-rl;
+      letter-spacing: .18em;
+    }
+    body.sidebar-open #sidebar-tab .sidebar-tab-arrow {
+      transform: rotate(180deg);
+    }
 
     /* Star chart bg inside sidebar */
     .sidebar-bg-chart {
@@ -1010,7 +1043,10 @@
       </div>
     </div>
   </div>
-  
+  <div id="sidebar-tab" onclick="sidebarToggle()" aria-label="toggle sidebar">
+    <span class="sidebar-tab-arrow">›</span>
+  </div>
+
   <div id="subluna-bottombar" class="collapsed">
     <div class="bb-bg-chart" id="bb-bg-chart" aria-hidden="true"></div>
     <div class="bb-bg-tint" aria-hidden="true"></div>
@@ -1622,96 +1658,14 @@
   </script>
 
   <script>
-  // ── Sidebar open/close (swipe-only — no click handle) ──────────────────────
-  let _horoLoaded = false;
-  function sidebarSetOpen(open) {
+  // ── Sidebar toggle ────────────────────────────────────────────────────────
+  function sidebarToggle() {
     const sidebar = document.getElementById('subluna-sidebar');
-    const wasOpen = sidebar.classList.contains('open');
-    sidebar.classList.toggle('open', open);
-    document.body.classList.toggle('sidebar-open', open);
-    if (open && !wasOpen) {
-      wxEnsureInit();
-      if (!_horoLoaded) { _horoLoaded = true; loadHoroscope(); }
-    }
+    const isOpen = sidebar.classList.toggle('open');
+    document.body.classList.toggle('sidebar-open', isOpen);
+    // Load weather when first opened
+    if (isOpen) wxEnsureInit();
   }
-
-  // ── Sidebar swipe / drag gesture ────────────────────────────────────────
-  // Works with touch (phone), mouse (desktop "click and drag"), and stylus,
-  // since they all fire the same pointer events.
-  (function () {
-    const sidebar = document.getElementById('subluna-sidebar');
-    const EDGE_ZONE = 40;       // px from left edge that counts as "starting a swipe to open"
-    const DRAG_THRESHOLD = 60;  // px of horizontal movement needed to trigger open/close
-    const sidebarWidth = () => sidebar.getBoundingClientRect().width;
-
-    let dragging = false;
-    let startX = 0;
-    let startY = 0;
-    let currentX = 0;
-    let startedOpen = false;
-
-    function onPointerDown(e) {
-      // Ignore multi-touch / right-click etc.
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-      const isOpen = sidebar.classList.contains('open');
-      // Only start tracking if: sidebar is open (so we can swipe-close from
-      // anywhere on it), OR the touch starts near the left edge (to swipe-open).
-      if (!isOpen && e.clientX > EDGE_ZONE) return;
-
-      dragging = true;
-      startedOpen = isOpen;
-      startX = currentX = e.clientX;
-      startY = e.clientY;
-      sidebar.style.transition = 'none';
-    }
-
-    function onPointerMove(e) {
-      if (!dragging) return;
-      currentX = e.clientX;
-      const dx = currentX - startX;
-      const dy = e.clientY - startY;
-
-      // If the gesture is more vertical than horizontal, bail out —
-      // this was probably a scroll, not a swipe.
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 15) {
-        dragging = false;
-        sidebar.style.transition = '';
-        sidebar.style.transform = '';
-        return;
-      }
-
-      const w = sidebarWidth();
-      let translate;
-      if (startedOpen) {
-        // dragging left, from 0 toward -100%
-        translate = Math.min(0, Math.max(-w, dx));
-      } else {
-        // dragging right, from -100% toward 0
-        translate = Math.min(0, Math.max(-w, -w + dx));
-      }
-      sidebar.style.transform = `translateX(${translate}px)`;
-    }
-
-    function onPointerUp() {
-      if (!dragging) return;
-      dragging = false;
-      sidebar.style.transition = '';
-      sidebar.style.transform = '';
-
-      const dx = currentX - startX;
-      if (startedOpen) {
-        if (dx < -DRAG_THRESHOLD) sidebarSetOpen(false);
-      } else {
-        if (dx > DRAG_THRESHOLD) sidebarSetOpen(true);
-      }
-    }
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-    document.addEventListener('pointercancel', onPointerUp);
-  })();
 
   // ── Weather ───────────────────────────────────────────────────────────────
   const WX_ICONS = {
@@ -2043,7 +1997,18 @@
     }
   }
 
-  // Horoscope lazy-load now happens inside sidebarSetOpen() above.
+  // Hook into sidebar open to lazy-load horoscope
+  let _horoLoaded = false;
+  const _origSidebarToggle = window.sidebarToggle;
+  function sidebarToggleWithHoro() {
+    if (typeof _origSidebarToggle === 'function') _origSidebarToggle();
+    if (!_horoLoaded) { _horoLoaded = true; loadHoroscope(); }
+  }
+  // Override after DOM ready so radio.js sidebarToggle is captured
+  document.addEventListener('DOMContentLoaded', () => {
+    const tab = document.getElementById('sidebar-tab');
+    if (tab) tab.onclick = sidebarToggleWithHoro;
+  });
 
 </script>
 
