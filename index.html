@@ -1033,7 +1033,7 @@
       <button class="btn btn-ghost btn-sm btn-icon" id="rbackbtn" onclick="rBack()" disabled>&#xf170;</button>
       <button class="btn btn-ghost btn-sm btn-icon" id="rskipbtn" onclick="rSkip()" disabled>&#xf163;</button>
       <button class="btn btn-ghost btn-sm btn-icon" id="rlocation-refresh" onclick="rRadioRefresh()" title="Follow moon" disabled style="color:var(--dust);opacity:.3;font-family:'52Sphere',monospace;font-size:47px;min-width:unset;padding:0rem 0.8rem;cursor:default;transition:color .2s,opacity .2s;margin-bottom:0.5rem;">R</button>
-      <div class="bb-vol">VOL <input type="range" id="rvol" min="0" max="1" step="0.01" value="0.3"></div>
+      <div class="bb-vol" style="display:none;">VOL <input type="range" id="rvol" min="0" max="1" step="0.01" value="1"></div>
     </div>
     <div class="bb-body" id="bb-body" onmouseenter="bbClearAutoCollapse()" ontouchstart="bbClearAutoCollapse()">
       <div style="height: 0.25rem;"></div>
@@ -1083,6 +1083,19 @@
   </div>
 
   <audio id="raud"></audio>
+  <script>
+  // Force full volume on the radio audio element. The on-screen volume
+  // slider is hidden (see #rvol above) — users control volume via their
+  // device's hardware controls instead. This runs after radio.js loads,
+  // and also reapplies on every 'play' event in case radio.js or a saved
+  // setting tries to reset it.
+  (function () {
+    const raud = document.getElementById('raud');
+    if (!raud) return;
+    raud.volume = 1;
+    raud.addEventListener('play', () => { raud.volume = 1; });
+  })();
+  </script>
 
   <script>
   const SUBLUNA_USER_KEY = 'subluna_user';
@@ -1979,7 +1992,12 @@
     }, () => { wxSetStatus('permission denied'); });
   }
 
-  // ── Init (called once when sidebar first opens) ───────────────────────────
+  // ── Init ────────────────────────────────────────────────────────────────
+  // Previously this only ran when the sidebar was first opened, which meant
+  // the user would visibly watch the weather populate (—  → "loading…" →
+  // real data) right in front of them. Now it prefetches quietly in the
+  // background shortly after page load, so by the time the sidebar opens
+  // the data is already sitting there ready — no visible pop-in.
   let _wxInited = false;
   function wxEnsureInit() {
     if(_wxInited) return;
@@ -1990,6 +2008,15 @@
     } else {
       wxSetStatus('enter a city or tap ◎');
     }
+  }
+
+  // Kick off the background prefetch once the page has settled, rather
+  // than blocking initial render. requestIdleCallback runs it when the
+  // browser is free; falls back to a short timeout where unsupported.
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => wxEnsureInit());
+  } else {
+    setTimeout(() => wxEnsureInit(), 800);
   }
 
   // Close suggestions when clicking outside
