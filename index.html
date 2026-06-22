@@ -1028,7 +1028,7 @@
           <div class="horo-section-label">daily horoscope</div>
           <div id="horo-sign-name"></div>
           <div id="horo-text">loading…</div>
-        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
       </div>
     </div>
@@ -1729,7 +1729,7 @@
     const lo = today.mintempF ? Math.round(today.mintempF) + '°F' : null;
     const hilo = (hi && lo) ? `${hi} ↑  ${lo} ↓` : '';
 
-    // Hourly — wttr gives 3-hour slots
+    // Hourly — wttr gives 3-hour slots 3 hour weather
     const todaySlots = (today.hourly || []);
     const now = new Date();
     const curH = now.getHours();
