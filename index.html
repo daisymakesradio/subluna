@@ -210,7 +210,7 @@
     #subluna-topbar.active { visibility: visible; }
     .topbar-wordmark {
       font-family: 'Futura FW', sans-serif;
-      font-size: 2rem;
+      font-size: 1.5rem;
       letter-spacing: 0.13em;
       color: var(--dim);
       line-height: 1;
@@ -257,6 +257,49 @@
       overflow: hidden;
     }
     #subluna-bottombar.active { visibility: visible; }
+
+    /* ── Subscreen toggle arrow ───────────────────────────────────────── */
+    /* Small centered tab sitting right at the seam where the subscreen's
+       bottom edge meets the bottombar. Always visible (whether the
+       subscreen is open or closed) as a prompt to click; the arrow flips
+       to point the opposite direction once the subscreen is expanded. */
+    #subscreen-toggle {
+      position: fixed;
+      bottom: calc(var(--bottombar-h) - 1px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10021; /* above topbar/bottombar (10020) and sidebar (10015) */
+      width: 34px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5,4,4,0.95);
+      border: .5px solid var(--faint);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      color: var(--dust);
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+      visibility: hidden;
+      transition: color .15s, border-color .15s;
+    }
+    #subscreen-toggle.active { visibility: visible; }
+    #subscreen-toggle:hover {
+      color: var(--signal);
+      border-color: rgba(224,85,64,.4);
+    }
+    #subscreen-toggle .subscreen-toggle-arrow {
+      display: inline-block;
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+    }
+    /* Closed: prompt points down (pull the subscreen down).
+       Open: arrow inverts to point up (collapse it back). */
+    #subscreen-toggle.subscreen-open .subscreen-toggle-arrow {
+      transform: rotate(180deg);
+    }
 
     .bb-bg-chart {
       position: absolute;
@@ -502,25 +545,7 @@
       overflow: hidden;
     }
 
-    /* Pull indicator at bottom of sidebar */
-    .sidebar-pull-hint {
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      padding: .55rem 0 .4rem;
-      background: rgba(5,4,4,0.88);
-    }
-    .sidebar-pull-hint::before {
-      content: '';
-      display: block;
-      width: 36px;
-      height: 3px;
-      border-radius: 2px;
-      background: rgba(193,184,173,0.22);
-    }
-
-    /* sidebar-tab removed — sidebar is swipe-only now */
+    /* sidebar-tab removed — sidebar opens/closes via topbar click */
 
     /* Star chart bg inside sidebar */
     .sidebar-bg-chart {
@@ -541,6 +566,9 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
+      /* Topbar stays fixed at the top (it's just the click target that
+         toggles the subscreen open/closed), so reserve its height here
+         to keep content clear of it. */
       padding: calc(var(--topbar-h) + 1.25rem) 1rem 1.25rem;
       scrollbar-width: thin;
       scrollbar-color: var(--faint) transparent;
@@ -555,7 +583,7 @@
     /* Day title inside sidebar */
     .sidebar-day-title {
       font-family: 'Futura FW', sans-serif;
-      font-size: 1.2rem;
+      font-size: 0.8rem;
       font-weight: 600;
       letter-spacing: 0.13em;
       color: var(--dim);
@@ -714,29 +742,28 @@
       opacity: .6;
       flex: 1;
     }
-    .widget-drag-handle {
+    /* Picker drag rows */
+    .widget-picker-item {
+      cursor: default;
+    }
+    .widget-picker-item.picker-dragging {
+      opacity: .4;
+      background: rgba(224,85,64,0.05);
+    }
+    .widget-picker-item.picker-drag-over {
+      border-top-color: var(--signal);
+    }
+    .picker-drag-handle {
       color: var(--dust);
-      opacity: .3;
-      font-size: 11px;
+      opacity: .35;
+      font-size: 13px;
       cursor: grab;
-      padding: 0 .15rem;
+      padding: 0 .4rem 0 0;
       user-select: none;
       flex-shrink: 0;
+      touch-action: none;
     }
-    .widget-drag-handle:active { cursor: grabbing; opacity: .7; }
-    .widget-remove-btn {
-      background: none;
-      border: none;
-      color: var(--dust);
-      opacity: .25;
-      font-size: 11px;
-      cursor: pointer;
-      padding: 0 .1rem;
-      line-height: 1;
-      transition: opacity .15s, color .15s;
-      flex-shrink: 0;
-    }
-    .widget-remove-btn:hover { opacity: .8; color: var(--signal); }
+    .picker-drag-handle:active { cursor: grabbing; opacity: .75; }
 
 
     /* ── 5-day forecast widget ───────────────────────────────────────── */
@@ -936,10 +963,12 @@
     #wx-hourly::-webkit-scrollbar { display: none; }
 
     /* ── Horoscope ────────────────────────────────────────────────── */
+    /* No top margin/padding/border here — this now renders inside the
+       generic .sidebar-widget wrapper (see widgetRenderAll), which already
+       supplies its own .widget-header ("HOROSCOPE" label) and top border.
+       The old margin-top/padding-top/border-top here were stacking on top
+       of that wrapper's spacing, pushing "LIBRA" down unnecessarily. */
     #horo-section {
-      margin-top: 1.25rem;
-      padding-top: 1rem;
-      border-top: .5px solid var(--faint);
       display: none;
     }
     .horo-section-label {
@@ -1238,7 +1267,7 @@
   </div>
 
   <div id="subluna-topbar">
-    <div class="topbar-wordmark" id="subluna-topbar-wordmark" style="cursor:pointer;user-select:none;" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))">SUB<span>L</span>UNA</div>
+    <div class="topbar-wordmark" id="subluna-topbar-wordmark" style="cursor:pointer;user-select:none;" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))"><span>S</span>UBSCREEN</div>
     <div class="topbar-right">
       <button id="rrefresh" onclick="rRefresh()" style="display:none"><span class="rspinicon">↺</span></button>
       <button id="subluna-logout-btn">LOGOUT</button>
@@ -1256,51 +1285,42 @@
 
         <!-- ── Add widget bar ── -->
         <div id="widget-add-bar">
-          <button id="widget-add-btn" onclick="widgetPickerOpen()">+ ADD WIDGET</button>
+          <button id="widget-add-btn" onclick="widgetPickerOpen()">MANAGE WIDGETS</button>
         </div>
 
-        <!-- ── Weather ── -->
-        <div class="wx-section-label">weather</div>
-
-        <!-- Location input row -->
-<!--         <div id="wx-loc-row">
-          <input id="wx-city-input" type="text" placeholder="city or place…"
-            oninput="wxCityInput(this.value)"
-            onkeydown="if(event.key==='Enter')wxCitySubmit()">
-          <button id="wx-geolocate-btn" onclick="wxGeolocate()" title="use my location">◎</button>
-          <div id="wx-suggestions"></div>
-        </div>
-        <div id="wx-loc-status"></div> -->
-
-        <!-- Current conditions -->
-        <div id="wx-main">
-          <div id="wx-loc-name"></div>
-          <div class="wx-current">
-            <div id="wx-icon">—</div>
-            <div class="wx-temp-block">
-              <div id="wx-temp">—</div>
-              <div id="wx-hilo"></div>
+        <!-- ── All widgets (built-in + user-added) live here ── -->
+        <div id="widget-zone">
+          <!-- Weather DOM anchors (hidden shell — moved into widget-zone by widget engine) -->
+          <div id="wx-main" style="display:none">
+            <div id="wx-loc-name"></div>
+            <div class="wx-current">
+              <div id="wx-icon">—</div>
+              <div class="wx-temp-block">
+                <div id="wx-temp">—</div>
+                <div id="wx-hilo"></div>
+              </div>
             </div>
+            <div id="wx-desc"></div>
+            <hr class="wx-divider">
+            <div id="wx-hourly"></div>
           </div>
-          <div id="wx-desc"></div>
-          <hr class="wx-divider">
-          <div id="wx-hourly"></div>
+          <!-- Horoscope DOM anchors -->
+          <div id="horo-section" style="display:none">
+            <div id="horo-sign-name"></div>
+            <div id="horo-text">loading…</div>
+          </div>
         </div>
-
-        <!-- ── Daily Horoscope ── -->
-        <div id="horo-section">
-          <div class="horo-section-label">daily horoscope</div>
-          <div id="horo-sign-name"></div>
-          <div id="horo-text">loading…</div>
-        </div>
-
-        <!-- ── User widgets ── -->
-        <div id="widget-zone"></div>
 
         <div style="height:3rem"></div>
       </div>
     </div>
-    <div class="sidebar-pull-hint"></div>
+  </div>
+
+  <!-- Centralized toggle arrow — click to expand/collapse the subscreen.
+       Sits at the seam where the subscreen meets the bottombar; the arrow
+       flips direction once the subscreen is open. -->
+  <div id="subscreen-toggle" role="button" aria-label="toggle subscreen" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))">
+    <span class="subscreen-toggle-arrow">▾</span>
   </div>
   
   <div id="subluna-bottombar" class="collapsed">
@@ -1372,7 +1392,7 @@
   <div id="widget-picker">
     <div id="widget-picker-backdrop" onclick="widgetPickerClose()"></div>
     <div id="widget-picker-card">
-      <div class="widget-picker-title">add widget</div>
+      <div class="widget-picker-title">manage widgets</div>
       <div id="widget-picker-list"></div>
       <button id="widget-picker-close" onclick="widgetPickerClose()">CLOSE</button>
     </div>
@@ -1612,6 +1632,7 @@
 
     document.getElementById('subluna-topbar')?.classList.add('active');
     document.getElementById('subluna-bottombar')?.classList.add('active');
+    document.getElementById('subscreen-toggle')?.classList.add('active');
     rEnsureRadioInit();
     if (!_moonInterval) _moonInterval = setInterval(moonRefresh, 12 * 60 * 1000);
     if (!_radioInterval) _radioInterval = setInterval(() => { if (!rPlaying) rInit(); }, 30 * 60 * 1000);
@@ -1899,7 +1920,7 @@
     function setDayTitle(){
       const[hi,rest]=DAYS[new Date().getDay()];
       const sidebar=document.getElementById('sidebar-day-title');
-      if(sidebar) sidebar.innerHTML=`<span>${hi}</span>${rest}`;
+      if(sidebar) sidebar.innerHTML=`${hi}${rest}`;
     }
     setDayTitle();
     const now=new Date();
@@ -1946,126 +1967,29 @@
   </script>
 
   <script>
-  // ── Sidebar open/close (swipe-only — no click handle) ──────────────────────
+  // ── Sidebar open/close (click the SUBSCREEN wordmark — no swipe) ───────────
+  // Swipe gesture was removed: it was hijacking vertical scroll gestures on
+  // mobile. The topbar stays fixed in place at the top — clicking it just
+  // toggles the subscreen panel, which slides down from underneath it
+  // (and back up to collapse), like pulling a screen down from the bar.
   let _horoLoaded = false;
   function sidebarSetOpen(open) {
     const sidebar = document.getElementById('subluna-sidebar');
-    const wasOpen = sidebar.classList.contains('open');
+    const toggle  = document.getElementById('subscreen-toggle');
     sidebar.classList.toggle('open', open);
     document.body.classList.toggle('sidebar-open', open);
-    if (open && !wasOpen) {
-      wxEnsureInit();
-      if (!_horoLoaded) { _horoLoaded = true; loadHoroscope(); }
+    if (toggle) toggle.classList.toggle('subscreen-open', open);
+
+    if (open) {
+      // Subscreen must always open scrolled to the top, not wherever the
+      // previous session happened to leave it.
+      const inner = sidebar.querySelector('.sidebar-inner');
+      if (inner) inner.scrollTop = 0;
     }
   }
+  </script>
 
-  // ── Sidebar swipe / drag gesture (top-down) ────────────────────────────
-  // Swipe down anywhere above the bottombar to open; swipe up to close.
-  (function () {
-    const sidebar = document.getElementById('subluna-sidebar');
-    const DRAG_THRESHOLD = 0.28; // fraction of sidebar height to commit
-    const FLICK_VELOCITY = 0.4;  // px/ms
-
-    const sidebarHeight = () => sidebar.getBoundingClientRect().height;
-    const bottombarTop = () => {
-      const bb = document.getElementById('subluna-bottombar');
-      return bb ? bb.getBoundingClientRect().top : window.innerHeight;
-    };
-
-    let dragging = false;
-    let startY = 0;
-    let startX = 0;
-    let currentY = 0;
-    let startedOpen = false;
-    let lastY = 0;
-    let lastT = 0;
-    let velocity = 0; // px/ms, positive = moving down
-
-    function onPointerDown(e) {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      // Don't intercept swipes while the login overlay is showing
-      const overlay = document.getElementById('intro-overlay');
-      if (overlay && !overlay.hidden) return;
-
-      const isOpen = sidebar.classList.contains('open');
-      // Don't start if touch is on or below the bottombar
-      if (e.clientY >= bottombarTop()) return;
-      // When closed, only open if swiping down (checked in move)
-      // When open, allow swipe-up to close from anywhere above bottombar
-
-      dragging = true;
-      startedOpen = isOpen;
-      startY = currentY = lastY = e.clientY;
-      startX = e.clientX;
-      lastT = e.timeStamp;
-      velocity = 0;
-      sidebar.style.transition = 'none';
-    }
-
-    function onPointerMove(e) {
-      if (!dragging) return;
-      currentY = e.clientY;
-      const dy = currentY - startY;
-      const dx = e.clientX - startX;
-
-      // If gesture is more horizontal than vertical, bail — it's a scroll or left-sidebar ghost
-      if (Math.abs(dx) > Math.abs(dy) * 1.3 && Math.abs(dx) > 20) {
-        dragging = false;
-        sidebar.style.transition = '';
-        sidebar.style.transform = '';
-        return;
-      }
-
-      const dt = e.timeStamp - lastT;
-      if (dt > 0) velocity = (currentY - lastY) / dt;
-      lastY = currentY;
-      lastT = e.timeStamp;
-
-      const h = sidebarHeight();
-      let translate;
-      if (startedOpen) {
-        // Dragging up to close: clamp between -h and 0
-        translate = Math.min(0, Math.max(-h, dy));
-      } else {
-        // Dragging down to open: starts at -h, moves toward 0
-        translate = Math.min(0, Math.max(-h, -h + dy));
-      }
-      sidebar.style.transform = `translateY(${translate}px)`;
-    }
-
-    function onPointerUp() {
-      if (!dragging) return;
-      dragging = false;
-
-      const h = sidebarHeight();
-      const dy = currentY - startY;
-      const distanceRatio = Math.abs(dy) / h;
-
-      let shouldOpen = startedOpen;
-
-      if (startedOpen) {
-        // Close: flick up fast OR dragged up past threshold
-        if ((velocity < -FLICK_VELOCITY && dy < 0) || (dy < 0 && distanceRatio > DRAG_THRESHOLD)) {
-          shouldOpen = false;
-        }
-      } else {
-        // Open: flick down fast OR dragged down past threshold
-        if ((velocity > FLICK_VELOCITY && dy > 0) || (dy > 0 && distanceRatio > DRAG_THRESHOLD)) {
-          shouldOpen = true;
-        }
-      }
-
-      sidebar.style.transition = '';
-      sidebar.style.transform = '';
-      sidebarSetOpen(shouldOpen);
-    }
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-    document.addEventListener('pointercancel', onPointerUp);
-  })();
-
+  <script>
   // ── Weather ───────────────────────────────────────────────────────────────
   const WX_ICONS = {
     0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
@@ -2361,7 +2285,10 @@
   })();
 
   // ── DAILY HOROSCOPE ───────────────────────────────────────────────────────
-  const HORO_PROXY = 'https://signal-hazel-mu.vercel.app';
+  // Pulled from a real API (freehoroscopeapi.com via the /api/horoscope
+  // Vercel proxy in this project — see api/horoscope.js). No locally
+  // generated/templated text. getSunSignFromDate() below is just date math
+  // to pick *which* sign to query; it does not author any horoscope content.
   let _horoCache = {};
 
   function getSunSignFromDate(dateStr) {
@@ -2391,28 +2318,31 @@
     const sign = getSunSignFromDate(user.birth.date);
     if (!sign) return;
 
-    const section = document.getElementById('horo-section');
-    const signEl  = document.getElementById('horo-sign-name');
-    const textEl  = document.getElementById('horo-text');
-    if (!section || !textEl) return;
-
-    section.style.display = 'block';
+    const signEl = document.getElementById('horo-sign-name');
+    const textEl = document.getElementById('horo-text');
+    if (!textEl) return;
     if (signEl) signEl.textContent = sign.toUpperCase();
 
-    const today = new Date().toISOString().slice(0, 10);
-    const cacheKey = `${sign}:daily:${today}`;
+    const today = new Date().toISOString().slice(0, 10); // e.g. "2026-06-22"
+    const cacheKey = `${sign}:${today}`;
     if (_horoCache[cacheKey]) { textEl.textContent = _horoCache[cacheKey]; return; }
 
     textEl.textContent = 'loading…';
     try {
-      const r = await fetch(`${HORO_PROXY}/api/horoscope?sign=${sign}&period=daily`);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const data = await r.json();
-      const text = data?.data?.horoscope || data?.horoscope || 'no reading available';
-      _horoCache[cacheKey] = text;
-      textEl.textContent = text;
-    } catch(e) {
-      textEl.textContent = 'could not load horoscope — ' + e.message;
+      const r = await fetch(`/api/horoscope?sign=${encodeURIComponent(sign)}&period=daily`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const json = await r.json();
+      const reading = json && json.data && json.data.horoscope;
+      if (!reading) throw new Error('no horoscope in response');
+
+      // The upstream API has occasionally echoed back a different sign than
+      // requested. Trust the sign label *we* asked for (computed from the
+      // user's real birthdate) over whatever the response claims, since
+      // that's what's actually being displayed as the section header.
+      _horoCache[cacheKey] = reading;
+      textEl.textContent = reading;
+    } catch (e) {
+      textEl.textContent = `Couldn't load today's horoscope — ${e.message}`;
     }
   }
 
@@ -2428,10 +2358,42 @@
   // ═══════════════════════════════════════════════════════════════════════
   // SUBLUNA WIDGET ENGINE
   // ═══════════════════════════════════════════════════════════════════════
-  const WIDGET_STORAGE_KEY = 'subluna_widgets_v1';
+  const WIDGET_STORAGE_KEY = 'subluna_widgets_v2'; // bumped — new unified system
 
-  // ── Registry of all available widgets ──────────────────────────────────
+  // ── Registry: built-ins first, then optional add-ons ───────────────────
+  // builtin:true  → seeded in default order; can still be removed/reordered
+  // render        → fn(container). For weather/horoscope we move existing DOM
+  //                 nodes into the widget body rather than re-rendering from scratch.
   const WIDGET_REGISTRY = [
+    {
+      id: 'weather',
+      name: 'Weather',
+      description: 'Current conditions + hourly forecast for your location',
+      builtin: true,
+      render(body) {
+        // Adopt the wx-main shell into this widget body
+        const shell = document.getElementById('wx-main');
+        if (shell) {
+          shell.style.display = 'block';
+          body.appendChild(shell);
+        }
+        wxEnsureInit();
+      },
+    },
+    {
+      id: 'horoscope',
+      name: 'Horoscope',
+      description: 'Daily reading for your sun sign',
+      builtin: true,
+      render(body) {
+        const shell = document.getElementById('horo-section');
+        if (shell) {
+          shell.style.display = 'block';
+          body.appendChild(shell);
+        }
+        if (!_horoLoaded) { _horoLoaded = true; loadHoroscope(); }
+      },
+    },
     {
       id: 'moon-phase',
       name: 'Moon Phase',
@@ -2449,40 +2411,251 @@
 
   // ── Persistence ────────────────────────────────────────────────────────
   function widgetLoadOrder() {
-    try { return JSON.parse(localStorage.getItem(WIDGET_STORAGE_KEY) || '[]'); }
-    catch(_) { return []; }
+    try {
+      const saved = JSON.parse(localStorage.getItem(WIDGET_STORAGE_KEY) || 'null');
+      if (Array.isArray(saved)) return saved;
+    } catch(_) {}
+    // First run — seed with built-in defaults
+    const defaults = WIDGET_REGISTRY.filter(w => w.builtin).map(w => w.id);
+    widgetSaveOrder(defaults);
+    return defaults;
   }
   function widgetSaveOrder(ids) {
     localStorage.setItem(WIDGET_STORAGE_KEY, JSON.stringify(ids));
   }
 
-  // ── Picker ─────────────────────────────────────────────────────────────
+  // ── Picker (unified manage panel with drag-to-reorder) ─────────────────
   function widgetPickerOpen() {
     const picker = document.getElementById('widget-picker');
     const list   = document.getElementById('widget-picker-list');
     if (!picker || !list) return;
+
     const active = widgetLoadOrder();
     list.innerHTML = '';
-    WIDGET_REGISTRY.forEach(w => {
-      const isAdded = active.includes(w.id);
-      const item = document.createElement('div');
-      item.className = 'widget-picker-item';
-      item.innerHTML = `
-        <div>
-          <div class="widget-picker-item-name">${w.name}</div>
-          <div class="widget-picker-item-desc">${w.description}</div>
-        </div>
-        <button class="widget-picker-item-action${isAdded ? ' added' : ''}"
-          onclick="${isAdded ? `widgetRemove('${w.id}')` : `widgetAdd('${w.id}')`}; widgetPickerOpen()">
-          ${isAdded ? 'REMOVE' : 'ADD'}
-        </button>`;
-      list.appendChild(item);
-    });
+
+    // Section 1: active widgets in current order (drag to reorder)
+    const activeDefs = active.map(id => WIDGET_REGISTRY.find(w => w.id === id)).filter(Boolean);
+    if (activeDefs.length) {
+      const sectionLabel = document.createElement('div');
+      sectionLabel.style.cssText = 'font-size:7px;letter-spacing:.22em;color:var(--dust);opacity:.5;text-transform:uppercase;padding:.5rem 0 .35rem;';
+      sectionLabel.textContent = 'active — drag to reorder';
+      list.appendChild(sectionLabel);
+
+      activeDefs.forEach(w => {
+        const item = document.createElement('div');
+        item.className = 'widget-picker-item';
+        item.dataset.wid = w.id;
+        item.innerHTML = `
+          <span class="picker-drag-handle" title="drag to reorder">⠿</span>
+          <div style="flex:1;min-width:0">
+            <div class="widget-picker-item-name">${w.name}</div>
+            <div class="widget-picker-item-desc">${w.description}</div>
+          </div>
+          <button class="widget-picker-item-action" style="color:rgba(224,85,64,.7);border-color:rgba(224,85,64,.25);"
+            data-action="remove" data-wid="${w.id}">REMOVE</button>`;
+        list.appendChild(item);
+      });
+    }
+
+    // Section 2: inactive widgets available to add
+    const inactiveDefs = WIDGET_REGISTRY.filter(w => !active.includes(w.id));
+    if (inactiveDefs.length) {
+      const sectionLabel = document.createElement('div');
+      sectionLabel.style.cssText = 'font-size:7px;letter-spacing:.22em;color:var(--dust);opacity:.5;text-transform:uppercase;padding:.85rem 0 .35rem;border-top:.5px solid var(--faint);margin-top:.5rem;';
+      sectionLabel.textContent = 'available';
+      list.appendChild(sectionLabel);
+
+      inactiveDefs.forEach(w => {
+        const item = document.createElement('div');
+        item.className = 'widget-picker-item';
+        item.dataset.wid = w.id;
+        item.innerHTML = `
+          <div style="flex:1;min-width:0;padding-left:.1rem">
+            <div class="widget-picker-item-name">${w.name}</div>
+            <div class="widget-picker-item-desc">${w.description}</div>
+          </div>
+          <button class="widget-picker-item-action"
+            data-action="add" data-wid="${w.id}">ADD</button>`;
+        list.appendChild(item);
+      });
+    }
+
+    // Delegate add/remove clicks
+    list.onclick = e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'add') widgetAdd(btn.dataset.wid);
+      else if (btn.dataset.action === 'remove') widgetRemove(btn.dataset.wid);
+      widgetPickerOpen(); // refresh panel
+    };
+
+    // Drag-to-reorder inside picker
+    pickerInitDrag(list);
     picker.classList.add('open');
   }
+
   function widgetPickerClose() {
     const picker = document.getElementById('widget-picker');
     if (picker) picker.classList.remove('open');
+  }
+
+  // ── Drag-to-reorder inside the picker list ─────────────────────────────
+  // Uses a floating clone as the drag ghost so the user can see what they're
+  // dragging. A solid insertion-line bar shows exactly where it will land.
+  function pickerInitDrag(list) {
+    // widgetPickerOpen() re-uses the same #widget-picker-list node on every
+    // open (only its children are wiped), but it calls pickerInitDrag()
+    // every time too. Without this guard, every reopen/refresh stacked a
+    // fresh set of pointer listeners on the same node — so after a few
+    // drags you'd have N duplicate handlers all firing per event, which is
+    // what was causing widgets to appear to "duplicate".
+    if (list.dataset.dragInit === '1') return;
+    list.dataset.dragInit = '1';
+
+    let dragged = null;
+    let ghost   = null;
+    let bar     = null; // insertion indicator
+    let insertBefore = null; // target node to insert before (null = append)
+    let activePointerId = null;
+
+    // Reuse a single bar across calls instead of appending a new one
+    // every time the picker re-renders (was leaking <div>s into <body>).
+    bar = document.getElementById('picker-drag-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'picker-drag-bar';
+      bar.style.cssText = `
+        position:fixed; left:0; right:0; height:2px;
+        background:var(--signal); pointer-events:none;
+        z-index:99999; display:none; border-radius:1px;
+        box-shadow:0 0 6px var(--signal);
+      `;
+      document.body.appendChild(bar);
+    }
+
+    function activeRows() {
+      return [...list.querySelectorAll('.widget-picker-item[data-wid]')]
+        .filter(r => r.querySelector('.picker-drag-handle'));
+    }
+
+    function commit() {
+      if (!dragged) return false;
+      // Apply DOM move
+      if (insertBefore) {
+        list.insertBefore(dragged, insertBefore);
+      } else {
+        // append after last active row
+        const rows = activeRows();
+        const last = rows[rows.length - 1];
+        if (last && last !== dragged) last.after(dragged);
+      }
+      // Persist
+      const newOrder = activeRows().map(r => r.dataset.wid);
+      widgetSaveOrder(newOrder);
+      return true;
+    }
+
+    function cleanup() {
+      if (ghost) { ghost.remove(); ghost = null; }
+      bar.style.display = 'none';
+      if (dragged) dragged.style.opacity = '';
+      dragged = null;
+      insertBefore = null;
+      activePointerId = null;
+    }
+
+    function finishDrag(shouldCommit) {
+      // Release capture BEFORE any re-render, so a detached/replaced
+      // handle never keeps the pointer captured.
+      if (activePointerId !== null) {
+        try { list.releasePointerCapture(activePointerId); } catch (_) {}
+      }
+      const changed = shouldCommit ? commit() : false;
+      cleanup();
+      if (changed) {
+        widgetRenderAll();
+        widgetPickerOpen();
+      }
+    }
+
+    // Capture on the LIST, not the handle — handles get destroyed/recreated
+    // on re-render, which silently breaks capture and leaves the drag stuck.
+    list.addEventListener('pointerdown', e => {
+      const handle = e.target.closest('.picker-drag-handle');
+      if (!handle) return;
+      // If a previous drag never cleaned up (stuck pointer), clear it first
+      // instead of stacking a second drag on top (this was the duplication bug).
+      if (dragged) { finishDrag(false); }
+
+      e.preventDefault();
+      e.stopPropagation();
+      const row = handle.closest('.widget-picker-item');
+      dragged = row;
+      dragged.style.opacity = '0.35';
+      activePointerId = e.pointerId;
+
+      // Create ghost
+      const rect = row.getBoundingClientRect();
+      ghost = row.cloneNode(true);
+      ghost.style.cssText = `
+        position:fixed; left:${rect.left}px; top:${rect.top}px;
+        width:${rect.width}px; pointer-events:none; z-index:99998;
+        background:#1a1410; border:.5px solid var(--signal);
+        padding:.65rem 0; opacity:.92;
+        box-shadow: 0 4px 18px rgba(0,0,0,.6);
+      `;
+      document.body.appendChild(ghost);
+      list.setPointerCapture(e.pointerId);
+    });
+
+    list.addEventListener('pointermove', e => {
+      if (!dragged || !ghost || e.pointerId !== activePointerId) return;
+      e.preventDefault();
+
+      // Move ghost
+      const rect = dragged.getBoundingClientRect();
+      ghost.style.top = (e.clientY - rect.height / 2) + 'px';
+
+      // Find insertion point among active rows (excluding dragged)
+      const rows = activeRows().filter(r => r !== dragged);
+      insertBefore = null;
+      bar.style.display = 'none';
+
+      for (const r of rows) {
+        const rr = r.getBoundingClientRect();
+        const mid = rr.top + rr.height / 2;
+        if (e.clientY < mid) {
+          insertBefore = r;
+          bar.style.display = 'block';
+          bar.style.top = rr.top + 'px';
+          break;
+        }
+      }
+      // If past all rows, show bar after last row
+      if (!insertBefore && rows.length) {
+        const lastRect = rows[rows.length - 1].getBoundingClientRect();
+        bar.style.display = 'block';
+        bar.style.top = lastRect.bottom + 'px';
+      }
+    });
+
+    list.addEventListener('pointerup', e => {
+      if (!dragged || e.pointerId !== activePointerId) return;
+      finishDrag(true);
+    });
+
+    list.addEventListener('pointercancel', e => {
+      if (e.pointerId !== activePointerId) return;
+      finishDrag(false);
+    });
+
+    // Safety net: if capture is lost for any reason (element removed from
+    // DOM, browser revokes it, etc.) without a pointerup ever firing, this
+    // fires and lets us clean up instead of leaving a stuck "ghost" drag.
+    list.addEventListener('lostpointercapture', e => {
+      if (e.pointerId !== activePointerId) return;
+      finishDrag(true);
+    });
   }
 
   // ── Add / remove ───────────────────────────────────────────────────────
@@ -2500,10 +2673,24 @@
   }
 
   // ── Render all active widgets ──────────────────────────────────────────
+  // Safe off-DOM depot for the weather/horoscope shells so innerHTML='' on
+  // #widget-zone doesn't destroy them when they're being re-parented.
+  const _shellDepot = document.createElement('div');
+  _shellDepot.hidden = true;
+  document.body.appendChild(_shellDepot);
+
   function widgetRenderAll() {
     const zone = document.getElementById('widget-zone');
     if (!zone) return;
+
+    // Park special shells safely off-DOM before wiping zone
+    const wxShell   = document.getElementById('wx-main');
+    const horoShell = document.getElementById('horo-section');
+    if (wxShell)   _shellDepot.appendChild(wxShell);
+    if (horoShell) _shellDepot.appendChild(horoShell);
+
     zone.innerHTML = '';
+
     const order = widgetLoadOrder();
     order.forEach(id => {
       const def = WIDGET_REGISTRY.find(w => w.id === id);
@@ -2514,66 +2701,14 @@
       wrapper.innerHTML = `
         <div class="widget-header">
           <span class="widget-label">${def.name}</span>
-          <span class="widget-drag-handle" title="drag to reorder">⠿</span>
-          <button class="widget-remove-btn" onclick="widgetRemove('${id}')" title="remove">✕</button>
         </div>
         <div class="widget-body"></div>`;
       zone.appendChild(wrapper);
       def.render(wrapper.querySelector('.widget-body'));
     });
-    widgetInitDrag();
-  }
-
-  // ── Drag-to-reorder ────────────────────────────────────────────────────
-  function widgetInitDrag() {
-    const zone = document.getElementById('widget-zone');
-    if (!zone) return;
-    let dragged = null;
-
-    zone.querySelectorAll('.widget-drag-handle').forEach(handle => {
-      const widget = handle.closest('.sidebar-widget');
-
-      handle.addEventListener('pointerdown', e => {
-        e.stopPropagation(); // don't trigger sidebar swipe
-        dragged = widget;
-        widget.classList.add('dragging');
-        handle.setPointerCapture(e.pointerId);
-      });
-
-      handle.addEventListener('pointermove', e => {
-        if (!dragged) return;
-        e.preventDefault();
-        // find which widget we're hovering over
-        const els = [...zone.querySelectorAll('.sidebar-widget:not(.dragging)')];
-        els.forEach(el => el.classList.remove('drag-over-top'));
-        const target = els.find(el => {
-          const r = el.getBoundingClientRect();
-          return e.clientY >= r.top && e.clientY < r.bottom;
-        });
-        if (target) target.classList.add('drag-over-top');
-      });
-
-      handle.addEventListener('pointerup', e => {
-        if (!dragged) return;
-        const els = [...zone.querySelectorAll('.sidebar-widget:not(.dragging)')];
-        const target = els.find(el => el.classList.contains('drag-over-top'));
-        els.forEach(el => el.classList.remove('drag-over-top'));
-        dragged.classList.remove('dragging');
-
-        if (target) {
-          // reorder in DOM
-          zone.insertBefore(dragged, target);
-          // persist new order
-          const newOrder = [...zone.querySelectorAll('.sidebar-widget')].map(el => el.dataset.widgetId);
-          widgetSaveOrder(newOrder);
-        }
-        dragged = null;
-      });
-    });
   }
 
   // ── Init on sidebar open ───────────────────────────────────────────────
-  // Hook into sidebarSetOpen — render widgets first time sidebar opens
   let _widgetsInited = false;
   const _origSidebarSetOpen = sidebarSetOpen;
   sidebarSetOpen = function(open) {
