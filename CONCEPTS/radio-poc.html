@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUBLUNA RADIO — Cockpit POC</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0a0806;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'IBM Plex Mono', monospace;
+  overflow: hidden;
+}
+
+/* ── Outer shell — sits at bottom, full width ── */
+#subluna-bottombar {
+  position: relative;
+  width: 100%;
+  max-width: 413px;
+}
+
+/* ── Cockpit PNG — the whole frame ── */
+#bb-cockpit-frame {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── All UI overlays are absolute inside #subluna-bottombar ── */
+/* Percentages map to the 413px display width / 734px display height of the PNG */
+/* Console panel occupies roughly the bottom 28.6% of the image (210/734) */
+/* Bay centers in % of width: left=15%, center=49%, right=86% */
+/* Console top in % of height: 71.4% from top */
+
+/* ── LEFT BAY: logo + wordmark ── */
+/* Center x=62/413=15%, console mid y≈80% */
+#bb-left-bay {
+  position: absolute;
+  left: 7%;
+  bottom: 19%;
+  width: 18%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+.bb-ring {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(224,85,64,0.5);
+  background: rgba(224,85,64,0.07);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.bb-ring::after {
+  content: '';
+  position: absolute; inset: 4px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(224,85,64,0.18);
+}
+.bb-s {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #e05540;
+  line-height: 1;
+  position: relative; z-index: 1;
+}
+.bb-wordmark {
+  font-size: 6.5px;
+  letter-spacing: 0.2em;
+  color: rgba(193,184,173,0.4);
+  text-align: center;
+}
+
+/* ── CENTER BAY: title, station, coords, status ── */
+/* x center=203/413=49%, sits in upper portion of console */
+#bb-center-bay {
+  position: absolute;
+  left: 26%;
+  right: 18%;
+  bottom: 26%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+.bb-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  color: #e05540;
+  line-height: 1;
+  white-space: nowrap;
+}
+.bb-station {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  color: #d6b56d;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bb-live-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #e05540;
+  flex-shrink: 0;
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.15} }
+.bb-coords {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 7.5px;
+  color: rgba(214,181,109,0.5);
+}
+.bb-status {
+  font-size: 7px;
+  color: rgba(193,184,173,0.35);
+  letter-spacing: 0.05em;
+}
+
+/* ── TRANSPORT CONTROLS — over the baked-in arrows ── */
+/* Back arrow is baked at roughly x=280/2048 of image = 56px on 413px display */
+/* Play center is roughly x=1024/2048 = 50% = 206px */
+/* Fwd arrow is baked at roughly x=1500/2048 = 302px */
+/* These sit at roughly y=3200/3641 = 87.9% from top */
+
+#bb-controls {
+  position: absolute;
+  left: 26%;
+  right: 18%;
+  bottom: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8%;
+}
+
+/* invisible tap targets over baked arrows — glow on press */
+.bb-tap {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  transition: filter .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bb-tap:active {
+  filter: drop-shadow(0 0 6px #e05540) brightness(2);
+}
+
+/* play button — coded circle, sits over the center gap between arrows */
+#rplaybtn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(224,85,64,0.55);
+  background: rgba(224,85,64,0.1);
+  color: #e05540;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding-left: 2px;
+  transition: background .15s, filter .15s;
+  flex-shrink: 0;
+}
+#rplaybtn:active, #rplaybtn.playing {
+  background: rgba(224,85,64,0.25);
+  filter: drop-shadow(0 0 8px rgba(224,85,64,0.6));
+}
+
+/* ── SIGNAL BARS OVERLAY — mix-blend-mode screen over baked bars ── */
+/* Right bay signal bars are at roughly x=1500-1900/2048, y=3150-3300/3641 */
+/* In display: x=302-381, y=86.5-90.6% from top */
+#bb-signal-overlay {
+  position: absolute;
+  right: 4%;
+  bottom: 11%;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.bb-bar {
+  width: 4px;
+  border-radius: 1px 1px 0 0;
+  background: transparent;
+  transition: background .3s, box-shadow .3s;
+}
+.bb-bar.on {
+  background: #e05540;
+  box-shadow: 0 0 4px rgba(224,85,64,0.8);
+}
+.bb-bar:nth-child(1){ height: 5px; }
+.bb-bar:nth-child(2){ height: 7px; }
+.bb-bar:nth-child(3){ height: 10px; }
+.bb-bar:nth-child(4){ height: 13px; }
+.bb-bar:nth-child(5){ height: 16px; }
+.bb-bar:nth-child(6){ height: 19px; }
+
+/* ── RECALIBRATE / FOLLOW MOON — bottom strip ── */
+/* Sits at very bottom center of console, y≈96% */
+#rlocation-refresh {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  opacity: 0.3;
+  transition: opacity .3s, filter .3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#rlocation-refresh.active {
+  opacity: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: moonPulse 2.5s ease-in-out infinite;
+}
+@keyframes moonPulse {
+  0%,100% { filter: drop-shadow(0 0 3px rgba(224,85,64,0.4)); }
+  50%      { filter: drop-shadow(0 0 10px rgba(224,85,64,0.9)); }
+}
+.bb-recal-icon {
+  font-size: 13px;
+  color: #e05540;
+  display: inline-block;
+}
+.bb-recal-label {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(224,85,64,0.8);
+  display: block;
+}
+.bb-recal-sub {
+  font-size: 7px;
+  letter-spacing: 0.05em;
+  color: rgba(193,184,173,0.4);
+  display: block;
+}
+
+/* hidden radio.js state hooks */
+#rnowplaying, #rmoon-loc, #rnowcount, #rnow-stamp,
+#rmoon-text, #rmoon-coords, #rscan-locked-msg,
+#rradio-refresh, #bb-header-coord-sep, #bb-header-coords { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="subluna-bottombar">
+
+  <!-- Cockpit frame PNG — transparency shows scene through windshield -->
+  <img id="bb-cockpit-frame"
+       src="/Users/daisyjames/Desktop/SUBLUNA RADIO/IMAGES/cockpit.PNG"
+       alt="">
+
+  <!-- LEFT BAY: logo -->
+  <div id="bb-left-bay">
+    <div class="bb-ring"><span class="bb-s">S</span></div>
+    <div class="bb-wordmark">SUBLUNA</div>
+  </div>
+
+  <!-- CENTER BAY: info -->
+  <div id="bb-center-bay">
+    <div class="bb-title">SUBLUNA RADIO</div>
+    <div class="bb-station">
+      <span class="bb-live-dot"></span>
+      <span id="bb-station-name">Radio Mix FM · Brazil</span>
+    </div>
+    <div class="bb-coords">
+      <span>◐</span>
+      <span id="bb-coords-text">8.20°S, 41.45°W</span>
+    </div>
+    <div class="bb-status" id="rstatus">scanning sublunar frequency…</div>
+  </div>
+
+  <!-- TRANSPORT: invisible taps over baked arrows + coded play circle -->
+  <div id="bb-controls">
+    <button class="bb-tap" id="rbackbtn" onclick="rBack&&rBack()" aria-label="Previous"></button>
+    <button id="rplaybtn" onclick="togglePlay()" aria-label="Play/Pause">▶</button>
+    <button class="bb-tap" id="rskipbtn" onclick="rSkip&&rSkip()" aria-label="Next"></button>
+  </div>
+
+  <!-- SIGNAL BARS: screen-blend overlay lights up baked bars -->
+  <div id="bb-signal-overlay">
+    <div class="bb-bar on"></div>
+    <div class="bb-bar on"></div>
+    <div class="bb-bar on"></div>
+    <div class="bb-bar on"></div>
+    <div class="bb-bar"></div>
+    <div class="bb-bar"></div>
+  </div>
+
+  <!-- FOLLOW MOON / RECALIBRATE -->
+  <button id="rlocation-refresh" onclick="rRadioRefresh&&rRadioRefresh()">
+    <span class="bb-recal-icon">↺</span>
+    <div>
+      <span class="bb-recal-label">RECALIBRATE</span>
+      <span class="bb-recal-sub">Update sublunar position</span>
+    </div>
+  </button>
+
+  <!-- Hidden radio.js state hooks (all IDs preserved) -->
+  <div id="rnowplaying"></div>
+  <div id="rmoon-loc"></div>
+  <span id="rnowcount"></span>
+  <div id="rnow-stamp"><span id="rstamp-name"></span><span id="rstamp-country"></span></div>
+  <span id="rmoon-text"></span>
+  <span id="rmoon-coords"></span>
+  <span id="rscan-locked-msg"></span>
+  <button id="rradio-refresh"></button>
+  <span id="bb-header-coord-sep"></span>
+  <span id="bb-header-coords"></span>
+
+</div>
+
+<script>
+  // ── Demo state ──────────────────────────────────────────────────────
+  let playing = false;
+
+  function togglePlay() {
+    playing = !playing;
+    const btn = document.getElementById('rplaybtn');
+    btn.innerHTML = playing ? '⏸' : '▶';
+    btn.style.paddingLeft = playing ? '0' : '2px';
+    btn.classList.toggle('playing', playing);
+    document.getElementById('rstatus').textContent =
+      playing ? 'live · Radio Mix FM' : 'paused';
+  }
+
+  // Signal bar animation
+  let sig = 4;
+  setInterval(() => {
+    sig = Math.max(1, Math.min(6, sig + (Math.random() > .5 ? 1 : -1)));
+    document.querySelectorAll('.bb-bar').forEach((b, i) => {
+      b.classList.toggle('on', i < sig);
+    });
+  }, 1400);
+
+  // Simulate follow-moon activation after 4s for demo
+  setTimeout(() => {
+    document.getElementById('rlocation-refresh').classList.add('active');
+    document.getElementById('rstatus').textContent = '⟡ moon has moved — follow?';
+  }, 4000);
+</script>
+</body>
+</html>

@@ -20,11 +20,134 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <style>
     @font-face {
+      font-family: 'WeatherSymbols';
+      src: url('FONTS/WeatherSymbols.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Sketter';
+      src: url('FONTS/Sketter Demo.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Enigma Key';
+      src: url('FONTS/Enigma Key.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'X-Scale';
+      src: url('FONTS/X-SCALE_.TTF') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
       font-family: 'Futura FW';
       src: url('FONTS/FUTRFW.TTF') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911';
+      src: url('FONTS/ultra911.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Bold';
+      src: url('FONTS/ultra911bold.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Bold Italic';
+      src: url('FONTS/ultra911boldital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Cond';
+      src: url('FONTS/ultra911cond.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Cond Italic';
+      src: url('FONTS/ultra911condital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Expand';
+      src: url('FONTS/ultra911expand.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Expand Italic';
+      src: url('FONTS/ultra911expandital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Grad';
+      src: url('FONTS/ultra911grad.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Grad Italic';
+      src: url('FONTS/ultra911gradital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Half';
+      src: url('FONTS/ultra911half.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Half Italic';
+      src: url('FONTS/ultra911halfital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Italic';
+      src: url('FONTS/ultra911ital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Laser';
+      src: url('FONTS/ultra911laser.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Laser Italic';
+      src: url('FONTS/ultra911laserital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Left';
+      src: url('FONTS/ultra911left.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Semi Italic';
+      src: url('FONTS/ultra911semital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Super Italic';
+      src: url('FONTS/ultra911superital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Title';
+      src: url('FONTS/ultra911title.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 Title Italic';
+      src: url('FONTS/ultra911titleital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 3D';
+      src: url('FONTS/ultra9113d.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Ultra911 3D Italic';
+      src: url('FONTS/ultra9113dital.ttf') format('truetype');
+      font-weight: normal; font-style: normal; font-display: swap;
     }
     @font-face {
       font-family: '52Sphere';
@@ -201,7 +324,7 @@
       z-index: 10020;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
       padding: 0 calc(50% - var(--col-w) / 2 + .75rem);
       background: rgba(5,4,4,0.97);
       border-bottom: transparent;
@@ -209,14 +332,17 @@
     }
     #subluna-topbar.active { visibility: visible; }
     .topbar-wordmark {
-      font-family: 'Futura FW', sans-serif;
-      font-size: 1.5rem;
+      font-family: 'Sketter', sans-serif;
+      font-size: 0.8rem;
       letter-spacing: 0.13em;
       color: var(--dim);
       line-height: 1;
-      font-weight: 600;
-      text-align: center;
-      flex: 1;
+      font-weight: normal;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: auto;
+      white-space: nowrap;
     }
     .topbar-wordmark span { color: var(--signal); }
     .topbar-right { display: flex; align-items: center; gap: .75rem; }
@@ -265,7 +391,7 @@
        to point the opposite direction once the subscreen is expanded. */
     #subscreen-toggle {
       position: fixed;
-      bottom: calc(var(--bottombar-h) - 1px);
+      top: var(--topbar-h);
       left: 50%;
       transform: translateX(-50%);
       z-index: 10021; /* above topbar/bottombar (10020) and sidebar (10015) */
@@ -276,8 +402,8 @@
       justify-content: center;
       background: rgba(5,4,4,0.95);
       border: .5px solid var(--faint);
-      border-bottom: none;
-      border-radius: 6px 6px 0 0;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
       color: var(--dust);
       font-size: 11px;
       line-height: 1;
@@ -557,7 +683,7 @@
       background-repeat: no-repeat;
       pointer-events: none;
       mix-blend-mode: screen;
-      opacity: 0.38;
+      opacity: 0.18;
       transition: opacity .4s;
     }
 
@@ -566,6 +692,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
       /* Topbar stays fixed at the top (it's just the click target that
          toggles the subscreen open/closed), so reserve its height here
          to keep content clear of it. */
@@ -588,7 +715,7 @@
       letter-spacing: 0.13em;
       color: var(--dim);
       line-height: 0;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0rem;
       padding-bottom: 1rem;
       border-bottom: 0px solid var(--faint);
     }
@@ -715,9 +842,8 @@
     }
     .sidebar-widget {
       padding: 1.1rem 0 1rem;
-      border-top: .5px solid var(--faint);
       position: relative;
-      touch-action: none;
+      touch-action: pan-y;
     }
     .sidebar-widget.dragging {
       opacity: .45;
@@ -772,10 +898,9 @@
       align-items: center;
       gap: .5rem;
       padding: .35rem 0;
-      border-bottom: .5px solid var(--faint);
       font-size: 11px;
     }
-    .fiveday-row:last-child { border-bottom: none; }
+    .fiveday-row:last-child { }
     .fiveday-day {
       width: 28px;
       font-size: 9px;
@@ -909,12 +1034,13 @@
     }
     .wx-current {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: .75rem;
       margin-bottom: .6rem;
     }
     #wx-icon {
-      font-size: 2rem;
+      font-family: 'WeatherSymbols', sans-serif;
+      font-size: 2.8rem;
       line-height: 1;
       flex-shrink: 0;
     }
@@ -947,9 +1073,7 @@
 
     .wx-divider {
       border: none;
-      border-top: .5px solid var(--faint);
       margin: .65rem 0;
-      opacity: .5;
     }
 
     /* Hourly strip */
@@ -1001,7 +1125,7 @@
       flex-shrink: 0;
     }
     .wx-hr-time { font-size: 8px; color: var(--dust); opacity: .7; letter-spacing: .03em; }
-    .wx-hr-icon { font-size: 1rem; }
+    .wx-hr-icon { font-size: 1rem; font-family: 'WeatherSymbols', sans-serif; }
     .wx-hr-temp { font-size: 9px; color: var(--ink); letter-spacing: .03em; }
 
     /* ── Intro login gate ───────────────────────────────────────────────── */
@@ -1280,13 +1404,13 @@
       <div class="sidebar-bg-chart" id="sidebar-bg-chart" aria-hidden="true"></div>
       <div class="sidebar-inner">
 
-        <!-- ── Day title ── -->
-        <div class="sidebar-day-title" id="sidebar-day-title"></div>
-
         <!-- ── Add widget bar ── -->
         <div id="widget-add-bar">
           <button id="widget-add-btn" onclick="widgetPickerOpen()">MANAGE WIDGETS</button>
         </div>
+
+        <!-- ── Day title ── -->
+        <div class="sidebar-day-title" id="sidebar-day-title"></div>
 
         <!-- ── All widgets (built-in + user-added) live here ── -->
         <div id="widget-zone">
@@ -1992,13 +2116,27 @@
   <script>
   // ── Weather ───────────────────────────────────────────────────────────────
   const WX_ICONS = {
-    0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
-    45:'🌫️',48:'🌫️',
-    51:'🌦️',53:'🌦️',55:'🌧️',
-    61:'🌧️',63:'🌧️',65:'🌧️',
-    71:'🌨️',73:'🌨️',75:'❄️',
-    80:'🌦️',81:'🌧️',82:'⛈️',
-    95:'⛈️',96:'⛈️',99:'⛈️',
+    0:'N',  // sun
+    1:'C',  // sun + cloud
+    2:'C',  // sun + cloud
+    3:'P',  // cloud (overcast)
+    45:'F', // wind cloud (fog)
+    48:'F', // wind cloud (fog)
+    51:'M', // light rain
+    53:'M', // rain
+    55:'M', // heavy rain
+    61:'M', // light rain
+    63:'M', // rain
+    65:'B', // heavy rain drops
+    71:'D', // snow
+    73:'D', // snow
+    75:'D', // heavy snow
+    80:'M', // showers
+    81:'B', // heavy showers
+    82:'A', // violent showers + thunder
+    95:'A', // thunderstorm
+    96:'A', // thunderstorm
+    99:'A', // severe thunderstorm
   };
   const WX_DESC = {
     0:'clear sky',1:'mainly clear',2:'partly cloudy',3:'overcast',
@@ -2035,7 +2173,7 @@
       hrEl.innerHTML = hourly.map(h =>
         `<div class="wx-hr">
           <div class="wx-hr-time">${h.label}</div>
-          <span class="wx-hr-icon">${WX_ICONS[h.code]||'—'}</span>
+          <span class="wx-hr-icon" style="font-family:'WeatherSymbols',sans-serif;">${WX_ICONS[h.code]||'—'}</span>
           <div class="wx-hr-temp">${h.temp}</div>
         </div>`
       ).join('');
@@ -2053,7 +2191,7 @@
     const today = d.weather?.[0] || {};
 
     const code = WTTR_TO_WMO[parseInt(cur.weatherCode)] ?? 0;
-    const icon = WX_ICONS[code] || '—';
+    const icon = `<span style="font-family:'WeatherSymbols',sans-serif;font-size:2rem;">${WX_ICONS[code]||'—'}</span>`;
     const desc = WX_DESC[code] || cur.weatherDesc?.[0]?.value || '';
     const temp = cur.temp_F ? Math.round(cur.temp_F) + '°F' : '—';
     const feels = cur.FeelsLikeF ? Math.round(cur.FeelsLikeF) + '°F' : '—';
@@ -2106,7 +2244,7 @@
     const cur = d.current || {};
     const daily = d.daily || {};
     const code = cur.weather_code ?? 0;
-    const icon = WX_ICONS[code] || '—';
+    const icon = `<span style="font-family:'WeatherSymbols',sans-serif;font-size:2rem;">${WX_ICONS[code]||'—'}</span>`;
     const desc = WX_DESC[code] || '';
     const temp = cur.temperature_2m != null ? Math.round(cur.temperature_2m) + '°F' : '—';
     const feels = cur.apparent_temperature != null ? Math.round(cur.apparent_temperature) + '°F' : '—';
@@ -2789,9 +2927,6 @@
     const phase      = moonIllum.phase;          // 0–1
     const illumPct   = Math.round(moonIllum.fraction * 100);
     const phaseName  = moonPhaseName(phase);
-    const distKm     = Math.round(moonPos.distance).toLocaleString();
-    const altDeg     = Math.round(moonPos.altitude * 180 / Math.PI * 10) / 10;
-    const azDeg      = Math.round(moonPos.azimuth  * 180 / Math.PI + 180); // convert to 0–360
     const rise       = moonTimes.rise ? fmtTime(moonTimes.rise) : '—';
     const set        = moonTimes.set  ? fmtTime(moonTimes.set)  : '—';
     const sign       = moonSign(now);
@@ -2799,10 +2934,7 @@
     container.innerHTML = `
       <div class="moon-phase-name">${phaseName}</div>
       <div class="moon-meta">
-        <span>${illumPct}% illuminated</span> · rise <span>${rise}</span> · set <span>${set}</span> · <span>${distKm} km</span> · <span>${altDeg}°</span> alt · <span>${azDeg}°</span> az
-      </div>
-      <div class="moon-sign-line">
-        moon in <span class="moon-sign-name">${sign.name} ${sign.sym}</span> · ${sign.energy} · favors ${sign.spell}. ${sign.garden}. a good day to tend what is growing.
+        <span>${illumPct}% illuminated</span> · rise <span>${rise}</span> · set <span>${set}</span> · moon in <span class="moon-sign-name">${sign.name} ${sign.sym}</span>
       </div>`;
   }
 
@@ -2830,7 +2962,7 @@
         const code = daily.weather_code[idx] ?? 0;
         const hi   = daily.temperature_2m_max[idx] != null ? Math.round(daily.temperature_2m_max[idx]) + '°' : '—';
         const lo   = daily.temperature_2m_min[idx] != null ? Math.round(daily.temperature_2m_min[idx]) + '°' : '—';
-        const icon = WX_ICONS[code] || '—';
+        const icon = `<span style="font-family:'WeatherSymbols',sans-serif;font-size:1.2rem;">${WX_ICONS[code]||'—'}</span>`;
         const desc = WX_DESC[code] || '';
         const dayLabel = DAY_LABELS[new Date(dateStr + 'T12:00:00').getDay()];
         return `<div class="fiveday-row">
