@@ -34,7 +34,7 @@ body {
 /* ── S LOGO — left bay ── */
 /* top:83.9% left:15.3% */
 #bb-left-bay {
-  top: 82.3%; left: 15.3%;
+  top: 84.3%; left: 15.3%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -68,7 +68,7 @@ body {
 /* ── NOW PLAYING — center bay ── */
 /* top:81.3% left:49.9% */
 #bb-center-bay {
-  top: 78.8%; left: 49.9%;
+  top: 80.8%; left: 49.9%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -101,7 +101,7 @@ body {
 /* ── PLAY BUTTON ── */
 /* top:89.9% left:49.6% */
 #rplaybtn {
-  top: 87.2%; left: 49.6%;
+  top: 89.2%; left: 49.6%;
   width: 42px; height: 42px;
   border-radius: 50%;
   border: 1.5px solid rgba(224,85,64,0.55);
@@ -121,7 +121,7 @@ body {
 /* ── BACK BUTTON ── */
 /* top:89.9% left:39.5% */
 #rbackbtn {
-  top: 87.2%; left: 39.2%;
+  top: 89.2%; left: 39.2%;
   width: 40px; height: 40px;
   background: none; border: none; cursor: pointer;
   color: rgba(193,184,173,0.55);
@@ -139,7 +139,7 @@ body {
 /* ── SKIP BUTTON ── */
 /* top:89.9% left:60.3% */
 #rskipbtn {
-  top: 87.2%; left: 60.3%;
+  top: 89.2%; left: 60.3%;
   width: 40px; height: 40px;
   background: none; border: none; cursor: pointer;
   color: rgba(193,184,173,0.55);
@@ -157,7 +157,7 @@ body {
 /* ── FOLLOW MOON — right circle bay ── */
 /* top:82.4% left:84.0% */
 #rlocation-refresh {
-  top: 80.4%; left: 84.0%;
+  top: 82.4%; left: 84.0%;
   width: 58px; height: 58px;
   border-radius: 50%;
   background: none; border: none;
@@ -180,11 +180,12 @@ body {
 }
 .bb-follow-icon {
   font-size: 20px; color: #e05540;
-}
 
-/* ── SIGNAL BARS — animated strength readout under the moon ── */
+
+/* ── SIGNAL BARS — screen blend over baked bars ── */
+/* top:90.5% left:83.3% */
 #bb-signal-overlay {
-  top: 90.0%; left: 84.0%;
+  top: 90.5%; left: 83.3%;
   display: flex; align-items: flex-end; gap: 2px;
   mix-blend-mode: screen;
   pointer-events: none;
@@ -206,8 +207,9 @@ body {
 .bb-bar:nth-child(6){ height: 18px; }
 
 /* ── MESSAGES — status / lost signal / follow prompt ── */
+/* top:96.2% left:49.9% */
 #bb-messages {
-  top: 94.0%; left: 49.9%;
+  top: 96.2%; left: 49.9%;
   width: 220px;
   text-align: center;
   pointer-events: none;
@@ -222,46 +224,6 @@ body {
   color: rgba(224,85,64,0.7);
   display: none;
   margin-top: 2px;
-}
-
-/* ── NOW PLAYING ANNOUNCEMENT — scrolling ticker under transport buttons ── */
-#bb-announcement {
-  top: 91.5%; left: 49.9%;
-  width: 190px;
-  height: 11px;
-  overflow: hidden;
-  position: relative;
-  pointer-events: none;
-}
-#bb-announcement::before,
-#bb-announcement::after {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 16px;
-  z-index: 2;
-  pointer-events: none;
-}
-#bb-announcement::before {
-  left: 0;
-  background: linear-gradient(to right, #0a0806, transparent);
-}
-#bb-announcement::after {
-  right: 0;
-  background: linear-gradient(to left, #0a0806, transparent);
-}
-#bb-announcement-text {
-  display: inline-block;
-  white-space: nowrap;
-  font-size: 8px;
-  letter-spacing: 0.05em;
-  color: #d6b56d;
-  animation: announceScroll 12s linear infinite;
-  padding-left: 100%;
-}
-@keyframes announceScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
 }
 
 /* hidden radio.js hooks */
@@ -320,11 +282,6 @@ body {
     <div class="bb-bar"></div>
   </div>
 
-  <!-- NOW PLAYING ANNOUNCEMENT TICKER -->
-  <div class="bb-el" id="bb-announcement">
-    <span id="bb-announcement-text">now playing — Radio Mix FM</span>
-  </div>
-
   <!-- MESSAGES -->
   <div class="bb-el" id="bb-messages">
     <span id="rstatus">scanning sublunar frequency…</span>
@@ -350,31 +307,6 @@ body {
     btn.classList.toggle('playing', playing);
     document.getElementById('rstatus').textContent =
       playing ? 'live · Radio Mix FM' : 'paused';
-    setAnnouncement(playing ? 'now playing — Radio Mix FM' : 'paused — tap play to resume');
-  }
-
-  // Now-playing announcement ticker
-  const announcements = [
-    'now playing — Radio Mix FM',
-    'next up in 03:12 — unknown track',
-    '⟡ broadcasting from 8.20°S, 41.45°W'
-  ];
-  let annIndex = 0;
-  const annText = document.getElementById('bb-announcement-text');
-  function rotateAnnouncement() {
-    annIndex = (annIndex + 1) % announcements.length;
-    // restart animation cleanly
-    annText.style.animation = 'none';
-    annText.textContent = announcements[annIndex];
-    requestAnimationFrame(() => {
-      annText.style.animation = '';
-    });
-  }
-  // rotate once the current scroll cycle finishes
-  annText.addEventListener('animationiteration', rotateAnnouncement);
-
-  function setAnnouncement(text) {
-    annText.textContent = text;
   }
 
   // Signal animation

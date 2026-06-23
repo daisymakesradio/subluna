@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUBLUNA — Layout Alignment Tool</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #111; font-family: monospace; display: flex; gap: 0; height: 100vh; overflow: hidden; }
+
+/* LEFT: cockpit canvas */
+#canvas {
+  position: relative;
+  flex-shrink: 0;
+  width: 413px;
+  overflow: hidden;
+}
+#canvas img {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* draggable elements */
+.el {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  border: 1px dashed rgba(255,100,60,0.6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  color: rgba(255,100,60,0.9);
+  background: rgba(224,85,64,0.12);
+  white-space: nowrap;
+  border-radius: 4px;
+}
+.el:active { cursor: grabbing; border-color: #e05540; background: rgba(224,85,64,0.25); }
+.el.selected { border-color: #fff; color: #fff; }
+
+/* RIGHT: output panel */
+#panel {
+  flex: 1;
+  background: #0d0d0d;
+  padding: 16px;
+  overflow-y: auto;
+  border-left: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#panel h2 { color: #e05540; font-size: 13px; letter-spacing: 0.15em; }
+#panel p { color: #888; font-size: 10px; line-height: 1.6; }
+#coords-output {
+  background: #000;
+  border: 1px solid #222;
+  padding: 12px;
+  font-size: 10px;
+  color: #e05540;
+  line-height: 2;
+  white-space: pre;
+  flex: 1;
+}
+button.copy-btn {
+  background: #e05540;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 4px;
+}
+button.copy-btn:hover { background: #c03428; }
+#selected-info {
+  color: #666;
+  font-size: 10px;
+  padding: 8px;
+  background: #111;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div id="canvas">
+  <img src="/Users/daisyjames/Desktop/SUBLUNA RADIO/IMAGES/cockpit.PNG" id="frame" alt="">
+
+  <!-- Drag each of these to its correct position -->
+  <div class="el" id="el-logo"     style="width:60px;height:70px;left:10px;top:600px">S LOGO</div>
+  <div class="el" id="el-center"   style="width:130px;height:80px;left:140px;top:610px">NOW PLAYING</div>
+  <div class="el" id="el-play"     style="width:44px;height:44px;left:185px;top:730px">▶</div>
+  <div class="el" id="el-back"     style="width:44px;height:44px;left:140px;top:730px">◀◀</div>
+  <div class="el" id="el-skip"     style="width:44px;height:44px;left:230px;top:730px">▶▶</div>
+  <div class="el" id="el-followmoon" style="width:60px;height:60px;left:330px;top:700px">FOLLOW MOON</div>
+  <div class="el" id="el-signal"   style="width:60px;height:20px;left:320px;top:770px">SIGNAL</div>
+  <div class="el" id="el-messages" style="width:200px;height:24px;left:100px;top:800px">MESSAGES</div>
+</div>
+
+<div id="panel">
+  <h2>SUBLUNA ALIGNMENT TOOL</h2>
+  <p>Drag each box to its correct position over the cockpit frame.<br>
+  When happy, click <strong>COPY CSS</strong> — paste the output to Claude.</p>
+
+  <div id="selected-info">Click an element to select it. Arrow keys nudge by 1px.</div>
+
+  <div id="coords-output">drag elements to generate coordinates…</div>
+  <button class="copy-btn" onclick="copyCoords()">COPY CSS COORDS</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const output = document.getElementById('coords-output');
+const info   = document.getElementById('selected-info');
+let selected = null;
+
+const labels = {
+  'el-logo':      'S Logo + Wordmark  (left bay)',
+  'el-center':    'Now Playing info   (center bay top)',
+  'el-play':      'Play button',
+  'el-back':      'Back button',
+  'el-skip':      'Skip button',
+  'el-followmoon':'Follow Moon button (right circle)',
+  'el-signal':    'Signal bars',
+  'el-messages':  'Messages / status  (below center)',
+};
+
+function getCoords(el) {
+  const cw = canvas.offsetWidth;
+  const ch = canvas.querySelector('img').offsetHeight || 1000;
+  const l = parseInt(el.style.left);
+  const t = parseInt(el.style.top);
+  const w = el.offsetWidth;
+  const h = el.offsetHeight;
+  return {
+    left_px: l, top_px: t,
+    left_pct: ((l + w/2) / cw * 100).toFixed(1),
+    top_pct:  ((t + h/2) / ch * 100).toFixed(1),
+    bottom_pct: (((ch - t - h/2) / ch) * 100).toFixed(1),
+    right_pct: (((cw - l - w/2) / cw) * 100).toFixed(1),
+  };
+}
+
+function updateOutput() {
+  const lines = Object.entries(labels).map(([id, label]) => {
+    const el = document.getElementById(id);
+    const c = getCoords(el);
+    return `/* ${label} */\n  top: ${c.top_pct}%;  left: ${c.left_pct}%;  /* px: ${c.left_px},${c.top_px} */`;
+  });
+  output.textContent = lines.join('\n\n');
+}
+
+function copyCoords() {
+  navigator.clipboard.writeText(output.textContent)
+    .then(() => { document.querySelector('.copy-btn').textContent = 'COPIED!'; setTimeout(() => document.querySelector('.copy-btn').textContent = 'COPY CSS COORDS', 2000); });
+}
+
+// Drag logic
+document.querySelectorAll('.el').forEach(el => {
+  let startX, startY, startL, startT;
+
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    // deselect old
+    if (selected) selected.classList.remove('selected');
+    selected = el;
+    el.classList.add('selected');
+    info.textContent = `Selected: ${labels[el.id]}\nArrow keys nudge 1px. Shift+arrow = 10px.`;
+
+    startX = e.clientX; startY = e.clientY;
+    startL = parseInt(el.style.left); startT = parseInt(el.style.top);
+    el.setPointerCapture(e.pointerId);
+  });
+
+  el.addEventListener('pointermove', e => {
+    if (!el.hasPointerCapture(e.pointerId)) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    el.style.left = (startL + dx) + 'px';
+    el.style.top  = (startT + dy) + 'px';
+    updateOutput();
+  });
+
+  el.addEventListener('pointerup', () => updateOutput());
+});
+
+// Arrow key nudge
+document.addEventListener('keydown', e => {
+  if (!selected) return;
+  const step = e.shiftKey ? 10 : 1;
+  const l = parseInt(selected.style.left);
+  const t = parseInt(selected.style.top);
+  if (e.key === 'ArrowLeft')  { selected.style.left = (l - step) + 'px'; e.preventDefault(); }
+  if (e.key === 'ArrowRight') { selected.style.left = (l + step) + 'px'; e.preventDefault(); }
+  if (e.key === 'ArrowUp')    { selected.style.top  = (t - step) + 'px'; e.preventDefault(); }
+  if (e.key === 'ArrowDown')  { selected.style.top  = (t + step) + 'px'; e.preventDefault(); }
+  updateOutput();
+});
+
+updateOutput();
+</script>
+</body>
+</html>
