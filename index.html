@@ -311,19 +311,56 @@
       bottom: 0; left: 50%;
       transform: translateX(-50%);
       width: 100%; max-width: 413px;
+      height: auto;
       z-index: 10020;
       display: flex;
       flex-direction: column;
-      padding: .6rem .85rem 0.95rem;
-      background: rgba(43, 5, 2, 0.92);
-      border-top: var(--signal) 0.5px solid;
-      border-left: var(--signal) 0.5px solid;
-      border-right: var(--signal) 0.5px solid;
-      gap: .45rem;
+      box-sizing: border-box;
+      /* 9-slice cockpit frame: border-image-slice values are pixel offsets
+         into cockpit-border.png (1177x607 source) marking where its window
+         cutout starts/ends (top 114, right 57, bottom 113, left 87). Using
+         border-image (not a stretched background-image) means the bezel
+         keeps a FIXED thickness and its corners stay unwarped no matter how
+         tall the inner screen needs to grow — only the straight mid-edges
+         stretch, never the corner bevels. */
+      border-style: solid;
+      border-width: 40px 20px 40px 31px;
+      border-image-source: url('IMAGES/cockpit-border.png');
+      border-image-slice: 114 57 113 87;
+      border-image-width: 40px 20px 40px 31px;
+      border-image-repeat: stretch;
+      background: rgba(8,6,5,0.94);
+      background-clip: padding-box;
+      /* Inner screen padding, on top of the border, so text doesn't touch
+         the bezel's inner lip. */
+      padding: .35rem .6rem .55rem;
+      gap: .3rem;
       visibility: hidden;
       overflow: hidden;
     }
     #subluna-bottombar.active { visibility: visible; }
+    /* Opaque backing behind the frame + screen, bled 5px past the border's
+       own edges. cockpit-border.png has soft/antialiased pixels along the
+       brushed-metal texture (not fully opaque everywhere); without a solid
+       layer directly behind it, the page's starfield/chart background
+       (both position:fixed, full-viewport, z-index 0-1) shows through both
+       the bezel's soft edges and the screen. This sits in this element's
+       own stacking context (z-index:10020 already isolates it) so it only
+       ever shows page background through genuinely transparent PNG pixels,
+       never anything brighter. */
+    #subluna-bottombar::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      background: #050403;
+      z-index: -1;
+      border-radius: 2px;
+    }
+    /* Player is now a fixed cockpit screen — collapse/expand is disabled.
+       radio.js may still toggle the .collapsed class; these overrides make
+       sure it has no visual effect so the screen stays static. */
+    #subluna-bottombar.collapsed { height: auto; padding: .35rem .6rem .55rem; }
+    #subluna-bottombar.collapsed .bb-body { max-height: none; opacity: 1; pointer-events: auto; }
 
     /* ── Subscreen toggle arrow ───────────────────────────────────────── */
     /* Small centered tab sitting right at the seam where the subscreen's
@@ -477,19 +514,11 @@
     .bb-header {
       display: flex; align-items: center; justify-content: flex-start;
       gap: .5rem; overflow: hidden;
-      cursor: pointer;
       user-select: none;
     }
     .bb-collapse-btn {
-      margin-left: auto;
-      color: var(--dust); font-size: 13px; line-height: 1;
-      padding: 0 .1rem;
-      transition: transform .2s ease, color .2s;
-      flex-shrink: 0;
-      pointer-events: none;
+      display: none; /* static cockpit screen — collapse/expand removed */
     }
-    .bb-header:hover .bb-collapse-btn { color: var(--signal); }
-    #subluna-bottombar.collapsed .bb-collapse-btn { transform: rotate(-180deg); }
     .bb-body {
       overflow: hidden;
       transition: max-height .25s ease, opacity .2s ease;
@@ -577,6 +606,45 @@
       animation: rspin .7s linear infinite;
       vertical-align: middle;
       margin-right: 4px;
+    }
+
+    /* ── Cockpit surround background ─────────────────────────────────────
+       Separate fixed element (not ::after) so it isn't clipped by the
+       bottombar's overflow:hidden. Sits at z-index 10019, one below the
+       bottombar (10020), above everything else.
+
+       Five dials — change only these to reposition/resize:
+         --cockpit-bg-scale   : width (100vw = full viewport width)
+         --cockpit-bg-x       : horizontal nudge in px (0 = centred)
+         --cockpit-bg-y       : vertical nudge in px (negative = shift up)
+         --cockpit-bg-opacity : 0–1 fade
+         --cockpit-bg-bleed   : how many px the image overflows past each
+                                edge of the viewport — hides any transparent
+                                pixels at the PNG corners so they're never
+                                visible. Increase if corners still show.
+    */
+    :root {
+      --cockpit-bg-scale:   100vw;
+      --cockpit-bg-x:       0px;
+      --cockpit-bg-y:       -26px;
+      --cockpit-bg-opacity: 1;
+      --cockpit-bg-bleed:   40px;
+    }
+    #cockpit-surround {
+      position: fixed;
+      /* Bleed below and to the sides so transparent PNG edges go offscreen */
+      bottom: calc(-1 * var(--cockpit-bg-bleed));
+      left: 50%;
+      width: calc(var(--cockpit-bg-scale) + 2 * var(--cockpit-bg-bleed));
+      /* aspect ratio of cockpit-border-2.PNG: 2048 × 594 */
+      aspect-ratio: 2048 / 594;
+      transform: translateX(calc(-50% + var(--cockpit-bg-x))) translateY(var(--cockpit-bg-y));
+      background-image: url('IMAGES/cockpit-border-2.PNG');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      opacity: var(--cockpit-bg-opacity);
+      pointer-events: none;
+      z-index: 10019;
     }
 
     /* ── Left sidebar ─────────────────────────────────────────────────── */
@@ -1394,10 +1462,13 @@
     <span class="subscreen-toggle-arrow">▾</span>
   </div>
   
-  <div id="subluna-bottombar" class="collapsed">
+  <!-- Cockpit surround: wider outer frame image, fills dead space behind the bezel -->
+  <div id="cockpit-surround" aria-hidden="true"></div>
+
+  <div id="subluna-bottombar">
     <div class="bb-bg-chart" id="bb-bg-chart" aria-hidden="true"></div>
     <div class="bb-bg-tint" aria-hidden="true"></div>
-    <div class="bb-header" onclick="bbToggleCollapse()" role="button" aria-label="collapse player">
+    <div class="bb-header" role="group" aria-label="now playing">
       <span class="bb-dot"></span>
       <span class="bb-header-title">SUB<span style="color:var(--signal)">L</span>UNA RADIO</span>
       <span class="bb-stamp-sep" id="bb-header-coord-sep" style="font-size:10px;font-family:'52Sphere';color:rgba(219, 200, 73, 0.592);">L</span>
@@ -1411,7 +1482,7 @@
       <button class="btn btn-ghost btn-sm btn-icon" id="rlocation-refresh" onclick="rRadioRefresh()" title="Follow moon" disabled style="color:var(--dust);opacity:.3;min-width:unset;padding:0rem 0.8rem;cursor:default;transition:color .2s,opacity .2s;margin-bottom:0.5rem;"><img src="IMAGES/moon.png" alt="moon" style="width:36px;height:36px;object-fit:contain;display:block;filter:invert(1);opacity:inherit;transition:filter .2s;"></button>
       <div class="bb-vol" style="display:none;">VOL <input type="range" id="rvol" min="0" max="1" step="0.01" value="1"></div>
     </div>
-    <div class="bb-body" id="bb-body" onmouseenter="bbClearAutoCollapse()" ontouchstart="bbClearAutoCollapse()">
+    <div class="bb-body" id="bb-body">
       <div style="height: 0.25rem;"></div>
       <div class="bb-stamp" id="rnow-stamp" style="display:none">
         <span class="bb-stamp-name" id="rstamp-name"></span>
@@ -1749,6 +1820,20 @@
     document.getElementById('subluna-topbar')?.classList.add('active');
     document.getElementById('subluna-bottombar')?.classList.add('active');
     document.getElementById('subscreen-toggle')?.classList.add('active');
+
+    // Dynamically sync --bottombar-h to the cockpit player's actual rendered
+    // height so the subscreen sidebar always stops exactly at its top edge.
+    // rAF ensures we measure after the browser has finished layout.
+    (function initBottombarSync() {
+      const bar = document.getElementById('subluna-bottombar');
+      if (!bar) return;
+      const update = () => requestAnimationFrame(() => {
+        const h = bar.getBoundingClientRect().height;
+        if (h > 0) document.documentElement.style.setProperty('--bottombar-h', h + 'px');
+      });
+      new ResizeObserver(update).observe(bar);
+      update(); // run immediately after boot
+    })();
     renderAsteroidHits(getAsteroidHits());
     rEnsureRadioInit();
     moonRefresh();
