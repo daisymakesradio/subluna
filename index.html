@@ -179,20 +179,6 @@
       font-style: normal;
       font-display: swap;
     }
-    @font-face {
-      font-family: 'Inversionz Unboxed';
-      src: url('FONTS/Inversionz Unboxed.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'Inversionz Unboxed';
-      src: url('FONTS/Inversionz Unboxed Italic.ttf') format('truetype');
-      font-weight: normal;
-      font-style: italic;
-      font-display: swap;
-    }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -301,7 +287,8 @@
       width: 100vw;
       height: 100vh;
       z-index: 1;
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: default;
     }
 
     #starChart-opacity-ctrl {
@@ -346,7 +333,7 @@
     }
     #subluna-topbar.active { visibility: visible; }
     .topbar-wordmark {
-      font-family: 'Inversionz Unboxed', sans-serif;
+      font-family: 'X-Scale', sans-serif;
       font-size: 1.75rem;
       letter-spacing: 0.13em;
       color: var(--dim);
@@ -1845,7 +1832,7 @@
   </script>
 
   <script>
-  // ── Decorative background: full-page twinkling starfield (plain 2D canvas, no WebGL) ──
+  // ── Decorative background: full-page twinkling starfield + approaching asteroids ──
   (function(){
     const cvs = document.getElementById('bg-stars-canvas');
     if (!cvs) return;
@@ -1861,7 +1848,7 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // Sparse field, slow-to-medium twinkle
+    // ── Stars ────────────────────────────────────────────────────────────────────
     const STAR_COUNT = 70;
     const stars = Array.from({ length: STAR_COUNT }, () => ({
       x: Math.random() * W,
@@ -1871,6 +1858,146 @@
       speed: 0.4 + Math.random() * 0.8
     }));
 
+    // ── Asteroid system ──────────────────────────────────────────────────────────
+    const MAX_ASTEROIDS = 3;
+    const APPROACH_DUR = 7000;
+    const MAX_R = 34;
+    const SPAWN_INTERVAL = 3200;
+
+    // Preload both sprite images
+    const asteroidImgs = [new Image(), new Image()];
+    asteroidImgs[0].src = 'IMAGES/asteroid-1.png';
+    asteroidImgs[1].src = 'IMAGES/asteroid-2.png';
+
+    const asteroids = [];
+    let lastSpawn = 0;
+
+    function makeAsteroid(now) {
+      return {
+        x: 0.08 * W + Math.random() * 0.84 * W,
+        y: 0.08 * H + Math.random() * 0.84 * H,
+        born: now,
+        rotation: Math.random() * Math.PI * 2,
+        spinSpeed: (0.004 + Math.random() * 0.008) * (Math.random() < 0.5 ? 1 : -1),
+        img: asteroidImgs[Math.random() < 0.5 ? 0 : 1],
+        glowPhase: Math.random() * Math.PI * 2,
+        state: 'alive',
+        particles: [],
+      };
+    }
+
+    function spawnAsteroid(now) {
+      if (asteroids.filter(a => a.state === 'alive').length < MAX_ASTEROIDS) {
+        asteroids.push(makeAsteroid(now));
+      }
+    }
+
+    function asteroidRadius(a, now) {
+      const age = now - a.born;
+      const t = Math.min(age / APPROACH_DUR, 1);
+      const eased = t * t;
+      return 1 + eased * (MAX_R - 1);
+    }
+
+    function drawAsteroid(a, now, t) {
+      const r = asteroidRadius(a, now);
+      const alpha = Math.min(r / 6, 1);
+      const glowBreathe = 0.5 + 0.5 * Math.sin(t * 1.1 + a.glowPhase);
+      const glowR = r * (2.4 + glowBreathe * 0.7);
+
+      ctx.save();
+      ctx.translate(a.x, a.y);
+
+      // Glow halo (pre-rotation so it stays circular)
+      const grd = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, glowR);
+      grd.addColorStop(0, `rgba(180, 160, 120, ${(0.18 + glowBreathe * 0.1) * alpha})`);
+      grd.addColorStop(0.5, `rgba(100, 85, 60, ${0.06 * alpha})`);
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.beginPath();
+      ctx.arc(0, 0, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+
+      // Sprite — rotated, centered
+      ctx.rotate(a.rotation);
+      ctx.globalAlpha = alpha;
+      if (a.img.complete && a.img.naturalWidth > 0) {
+        const d = r * 2.1;
+        ctx.drawImage(a.img, -d / 2, -d / 2, d, d);
+      } else {
+        // Fallback dot while image loads
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(160, 140, 110, ${alpha})`;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function explodeAsteroid(a, now) {
+      if (a.state !== 'alive') return;
+      a.state = 'exploding';
+      const r = asteroidRadius(a, now);
+      const count = 18 + Math.floor(Math.random() * 8);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.3 + Math.random() * 2.8;
+        a.particles.push({
+          x: a.x + (Math.random() - 0.5) * r,
+          y: a.y + (Math.random() - 0.5) * r,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          r: 0.8 + Math.random() * 2.2,
+        });
+      }
+      a.explodeStart = now;
+    }
+
+    function drawExplosion(a, now) {
+      const age = now - a.explodeStart;
+      const dur = 800;
+      if (age > dur) { a.state = 'dead'; return; }
+      const progress = age / dur;
+      const fade = (1 - progress) * (1 - progress);
+
+      for (const p of a.particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.97;
+        p.vy *= 0.97;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * (1 + progress * 0.5), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(210, 175, 110, ${fade})`;
+        ctx.fill();
+      }
+    }
+
+    // Tap / click to explode
+    function handleTap(e) {
+      const rect = cvs.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const cx = (e.clientX - rect.left) * scaleX;
+      const cy = (e.clientY - rect.top) * scaleY;
+      const now = performance.now();
+      for (const a of asteroids) {
+        if (a.state !== 'alive') continue;
+        const r = asteroidRadius(a, now);
+        const dist = Math.hypot(cx - a.x, cy - a.y);
+        if (dist < r * 1.4) { // slightly generous hit radius
+          explodeAsteroid(a, now);
+          return; // only pop one per tap
+        }
+      }
+    }
+    cvs.addEventListener('click', handleTap);
+    cvs.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) handleTap(e.touches[0]);
+    }, { passive: true });
+
+    // ── Render loop ──────────────────────────────────────────────────────────────
     const FPS = 20, FRAME_MS = 1000 / FPS;
     let lastFrame = 0, rafId = null;
 
@@ -1880,6 +2007,8 @@
       lastFrame = now;
       ctx.clearRect(0, 0, W, H);
       const t = now * 0.001;
+
+      // Stars
       for (const s of stars) {
         const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
         ctx.beginPath();
@@ -1887,8 +2016,42 @@
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Spawn new asteroid on interval
+      if (now - lastSpawn > SPAWN_INTERVAL) {
+        spawnAsteroid(now);
+        lastSpawn = now;
+      }
+
+      // Update & draw asteroids
+      for (const a of asteroids) {
+        if (a.state === 'dead') continue;
+
+        if (a.state === 'alive') {
+          a.rotation += a.spinSpeed;
+          // Auto-explode when fully "arrived"
+          if (now - a.born >= APPROACH_DUR) {
+            explodeAsteroid(a, now);
+          } else {
+            drawAsteroid(a, now, t);
+          }
+        }
+
+        if (a.state === 'exploding') {
+          drawExplosion(a, now);
+        }
+      }
+
+      // Prune dead asteroids
+      for (let i = asteroids.length - 1; i >= 0; i--) {
+        if (asteroids[i].state === 'dead') asteroids.splice(i, 1);
+      }
     }
     rafId = requestAnimationFrame(tick);
+
+    // Initial spawn so there's something on screen right away
+    spawnAsteroid(performance.now() - 2000); // born 2s "ago" so it's already visible
+    spawnAsteroid(performance.now() - 500);
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { if (rafId) cancelAnimationFrame(rafId); rafId = null; }
