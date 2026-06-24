@@ -3334,6 +3334,16 @@
     }
   }
 
+  function _twSignColor(sign){
+    const fire  = ['Aries','Leo','Sagittarius'];
+    const earth = ['Taurus','Virgo','Capricorn'];
+    const air   = ['Gemini','Libra','Aquarius'];
+    if (fire.includes(sign))  return 'var(--signal)';
+    if (earth.includes(sign)) return 'var(--gold)';
+    if (air.includes(sign))   return 'var(--dim)';
+    return '#7ab4c8'; // water signs
+  }
+
   async function renderTransitsWidget(container){
     _twContainer=container;
     _twActive=null;
