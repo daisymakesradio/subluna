@@ -262,7 +262,31 @@
       opacity: .85;
     }
     .topbar-wordmark span { color: var(--signal); }
+    .topbar-left { display: flex; align-items: center; gap: .75rem; position: relative; z-index: 1; margin-right: auto; }
     .topbar-right { display: flex; align-items: center; gap: .75rem; }
+    #asteroid-hit-counter {
+      display: flex;
+      align-items: center;
+      gap: .32rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: var(--dust);
+      text-transform: uppercase;
+      opacity: .58;
+      white-space: nowrap;
+      user-select: none;
+    }
+    #asteroid-hit-counter .ahc-icon { width: 11px; height: 11px; object-fit: contain; opacity: .85; flex-shrink: 0; }
+    #asteroid-hit-counter .ahc-count {
+      color: var(--dust);
+      font-variant-numeric: tabular-nums;
+      transition: color .15s, transform .15s;
+    }
+    #asteroid-hit-counter.ahc-pulse .ahc-count {
+      color: var(--signal);
+      transform: scale(1.18);
+    }
     #subluna-logout-btn {
       background: transparent;
       border: .5px solid rgba(193,184,173,0.2);
@@ -1309,6 +1333,11 @@
   </div>
 
   <div id="subluna-topbar">
+    <div class="topbar-left">
+      <div id="asteroid-hit-counter" title="asteroids destroyed">
+        <img class="ahc-icon" src="IMAGES/asteroid-1.png" alt=""><span class="ahc-count" id="asteroid-hit-count">0</span>
+      </div>
+    </div>
     <div class="topbar-wordmark" id="subluna-topbar-wordmark" style="cursor:pointer;user-select:none;" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))"><span>S</span>UBSCREEN</div>
     <div class="topbar-right">
       <button id="rrefresh" onclick="rRefresh()" style="display:none"><span class="rspinicon">↺</span></button>
@@ -1471,6 +1500,36 @@
 
   function hasValidSublunaUser(data) {
     return !!(data && data.birth && data.birth.date && data.birth.time && data.birth.city && data.weather && data.weather.name);
+  }
+
+  // ── Asteroid hit counter ───────────────────────────────────────────────────
+  // Stored as a field on the subluna_user object itself, so it lives alongside
+  // the account's login data: it travels with logout/backup/restore and reloads
+  // automatically whenever the same account data is loaded.
+  function renderAsteroidHits(n) {
+    const el = document.getElementById('asteroid-hit-count');
+    if (el) el.textContent = String(n);
+  }
+
+  function getAsteroidHits() {
+    const user = readSublunaUser();
+    return (user && Number.isFinite(user.hits)) ? user.hits : 0;
+  }
+
+  function bumpAsteroidHits() {
+    const user = readSublunaUser();
+    if (!user) return; // no account loaded yet — nothing to attach the count to
+    user.hits = (Number.isFinite(user.hits) ? user.hits : 0) + 1;
+    localStorage.setItem(SUBLUNA_USER_KEY, JSON.stringify(user));
+    renderAsteroidHits(user.hits);
+    const badge = document.getElementById('asteroid-hit-counter');
+    if (badge) {
+      badge.classList.remove('ahc-pulse');
+      void badge.offsetWidth; // restart animation
+      badge.classList.add('ahc-pulse');
+      clearTimeout(badge._ahcTimer);
+      badge._ahcTimer = setTimeout(() => badge.classList.remove('ahc-pulse'), 220);
+    }
   }
 
   function introSetStatus(msg) {
@@ -1645,6 +1704,19 @@
       savedAt: new Date().toISOString()
     };
 
+    // Same account (matched on birth date/time/city) logging back in keeps its
+    // existing asteroid hit count instead of resetting to 0.
+    const isSameAccount = (prev) => !!prev && prev.birth &&
+      prev.birth.date === user.birth.date &&
+      prev.birth.time === user.birth.time &&
+      prev.birth.city === user.birth.city;
+    const priorActive = readSublunaUser();
+    const priorBackup = (() => {
+      try { return JSON.parse(localStorage.getItem(SUBLUNA_USER_KEY + '_backup') || 'null'); } catch(_) { return null; }
+    })();
+    const matchedPrior = isSameAccount(priorActive) ? priorActive : (isSameAccount(priorBackup) ? priorBackup : null);
+    user.hits = (matchedPrior && Number.isFinite(matchedPrior.hits)) ? matchedPrior.hits : 0;
+
     if (!user.birth.date || !user.birth.time || !user.birth.city || !user.weather.name) {
       introSetStatus('date, time, birth city, and current location are required');
       if (startBtn) startBtn.disabled = false;
@@ -1677,6 +1749,7 @@
     document.getElementById('subluna-topbar')?.classList.add('active');
     document.getElementById('subluna-bottombar')?.classList.add('active');
     document.getElementById('subscreen-toggle')?.classList.add('active');
+    renderAsteroidHits(getAsteroidHits());
     rEnsureRadioInit();
     moonRefresh();
     if (!_moonInterval) _moonInterval = setInterval(moonRefresh, 12 * 60 * 1000);
@@ -1853,6 +1926,7 @@
     function explodeAsteroid(a, now) {
       if (a.state !== 'alive') return;
       a.state = 'exploding';
+      bumpAsteroidHits();
       const r = asteroidRadius(a, now);
       const count = 18 + Math.floor(Math.random() * 8);
       for (let i = 0; i < count; i++) {
