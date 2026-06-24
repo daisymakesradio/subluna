@@ -260,9 +260,11 @@ function rLockScan(){
   const rlBtn=document.getElementById('rlocation-refresh');
   if(rlBtn){
     rlBtn.disabled=false;
-    rlBtn.style.color='var(--signal)';
     rlBtn.style.opacity='1';
     rlBtn.style.cursor='pointer';
+    const img=rlBtn.querySelector('img');
+    // invert(1) = white, then sepia+saturate+hue-rotate to shift to --signal red
+    if(img) img.style.filter='invert(1) sepia(1) saturate(6) hue-rotate(310deg)';
   }
 }
 
@@ -322,6 +324,7 @@ function rSetStatus(msg){
 }
 
 function rBack(){
+  bbExpand();
   if(rScanLocked){rShowLockedHint();return;}
   if(rHistory.length>1){rHistory.pop();rIdx=rHistory[rHistory.length-1];}
   else if(rHistory.length===1){rIdx=rHistory[0];}
@@ -337,6 +340,7 @@ function rRefresh(){
 }
 
 function rRadioRefresh(){
+  bbExpand();
   if(!rScanLocked) return;
   rScanLocked=false;
   // Remove lock styling and re-enable skip buttons immediately
@@ -347,9 +351,10 @@ function rRadioRefresh(){
   const rlBtn=document.getElementById('rlocation-refresh');
   if(rlBtn){
     rlBtn.disabled=true;
-    rlBtn.style.color='var(--dust)';
     rlBtn.style.opacity='.3';
     rlBtn.style.cursor='default';
+    const img=rlBtn.querySelector('img');
+    if(img) img.style.filter='invert(1)'; // back to white/dim
   }
   // Stop whatever is currently playing so we cleanly switch to new geo-located stations
   const wasPlaying=rPlaying;
@@ -560,6 +565,14 @@ function rStopAudio() {
 let _bbAutoTimer = null;
 function bbClearAutoCollapse() { if (_bbAutoTimer) { clearTimeout(_bbAutoTimer); _bbAutoTimer = null; } }
 function bbScheduleAutoCollapse() { bbClearAutoCollapse(); _bbAutoTimer = setTimeout(() => { const bar = document.getElementById('subluna-bottombar'); if (bar && !bar.classList.contains('collapsed')) { bbToggleCollapse(); } }, 4000); }
+function bbExpand() {
+  const bar = document.getElementById('subluna-bottombar');
+  const btn = document.getElementById('bb-collapse-btn');
+  if (!bar || !bar.classList.contains('collapsed')) { bbScheduleAutoCollapse(); return; }
+  bar.classList.remove('collapsed');
+  if (btn) btn.setAttribute('aria-label', 'collapse player');
+  bbScheduleAutoCollapse();
+}
 function bbToggleCollapse() {
   const bar = document.getElementById('subluna-bottombar');
   const btn = document.getElementById('bb-collapse-btn');
@@ -582,6 +595,7 @@ function bbToggleCollapse() {
 })();
 
 function rTogglePlay() {
+  bbExpand();
   if (rState === 'playing' || rState === 'loading' || rState === 'buffering') {
     rStopAudio();
   } else {
@@ -590,6 +604,7 @@ function rTogglePlay() {
 }
 
 function rSkip() {
+  bbExpand();
   if(rScanLocked){rShowLockedHint();return;}
   const wasActive = (rState === 'playing' || rState === 'loading' || rState === 'buffering');
   _rHardStop();
