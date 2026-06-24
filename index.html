@@ -327,7 +327,7 @@
       align-items: center;
       justify-content: flex-end;
       padding: 0 calc(50% - var(--col-w) / 2 + .75rem);
-      background: var(signal);
+      background: rgba(5,4,4,0.97);
       border-bottom: transparent;
       visibility: hidden;
     }
@@ -402,11 +402,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(5,4,4,0.95);
+      background: rgba(152, 149, 149, 0.95);
       border: .5px solid var(--faint);
       border-top: none;
       border-radius: 0 0 6px 6px;
-      color: var(--dust);
+      color: rgba(43, 5, 2, 0.75);
       font-size: 11px;
       line-height: 1;
       cursor: pointer;
@@ -738,7 +738,7 @@
       border: .5px solid rgba(193,184,173,0.2);
       color: var(--dust);
       font-family: 'Heading Now Medium', sans-serif;
-      font-size: 7px;
+      font-size: 9px;
       letter-spacing: .28em;
       text-transform: uppercase;
       padding: .32rem .7rem;
@@ -895,16 +895,22 @@
 
 
     /* ── 5-day forecast widget ───────────────────────────────────────── */
+    .fiveday-list {
+      display: flex;
+      justify-content: left;
+      gap: .25rem;
+    }
     .fiveday-row {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: .5rem;
-      padding: .35rem 0;
+      gap: .35rem;
+      padding: 0;
       font-size: 11px;
     }
     .fiveday-row:last-child { }
     .fiveday-day {
-      width: 28px;
+      width: auto;
       font-size: 9px;
       letter-spacing: .08em;
       color: var(--dust);
@@ -913,17 +919,12 @@
       flex-shrink: 0;
     }
     .fiveday-icon { width: 22px; text-align: center; flex-shrink: 0; }
-    .fiveday-desc {
-      flex: 1;
-      color: var(--dust);
-      font-size: 9px;
-      letter-spacing: .02em;
-      opacity: .8;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .fiveday-desc { display: none; }
     .fiveday-temps {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .1rem;
       font-size: 10px;
       color: var(--ink);
       letter-spacing: .03em;
@@ -1081,7 +1082,7 @@
     /* Hourly strip */
     #wx-hourly {
       display: flex;
-      gap: .4rem;
+      gap: .2rem;
       overflow-x: auto;
       padding-bottom: .3rem;
       scrollbar-width: none;
@@ -1760,6 +1761,7 @@
     document.getElementById('subluna-bottombar')?.classList.add('active');
     document.getElementById('subscreen-toggle')?.classList.add('active');
     rEnsureRadioInit();
+    moonRefresh();
     if (!_moonInterval) _moonInterval = setInterval(moonRefresh, 12 * 60 * 1000);
     if (!_radioInterval) _radioInterval = setInterval(() => { if (!rPlaying) rInit(); }, 30 * 60 * 1000);
 
@@ -2239,6 +2241,8 @@
       window.rMoonCoords = coords;
       const coordEl = document.getElementById('rmoon-coords');
       if (coordEl) coordEl.innerHTML = rFmtCoords(coords.lat, coords.lon);
+      const headerCoordEl = document.getElementById('bb-header-coords');
+      if (headerCoordEl) headerCoordEl.innerHTML = rFmtCoords(coords.lat, coords.lon);
       const footer = document.getElementById('footer-coords');
       if (footer) footer.innerHTML = `moon: ${rFmtCoords(coords.lat, coords.lon)} (${coords.source})`;
       try {
@@ -3137,10 +3141,10 @@
           <span class="fiveday-day">${dayLabel}</span>
           <span class="fiveday-icon">${icon}</span>
           <span class="fiveday-desc">${desc}</span>
-          <span class="fiveday-temps">${hi} <span class="fiveday-lo">${lo}</span></span>
+          <span class="fiveday-temps"><span>${hi}</span><span class="fiveday-lo">${lo}</span></span>
         </div>`;
       });
-      container.innerHTML = rows.join('');
+      container.innerHTML = `<div class="fiveday-list">${rows.join('')}</div>`;
     } catch(e) {
       container.innerHTML = `<div class="moon-meta">could not load — ${e.message}</div>`;
     }
