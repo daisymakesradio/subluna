@@ -660,6 +660,7 @@
     }
 
     /* The actual panel content area */
+    /* The actual panel content area */
     .sidebar-panel {
       flex: 1;
       height: 100%;
@@ -2991,7 +2992,7 @@
   async function renderSpellsWidget(container) {
     container.innerHTML = '<div class="moon-meta">loading spells…</div>';
     try {
-      const res = await fetch('https://subluna.vercel.app/signal/json/spells.json');
+      const res = await fetch('https://signal-hazel-mu.vercel.app/signal/json/spells.json');
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
