@@ -664,7 +664,7 @@
       flex: 1;
       height: 100%;
       position: relative;
-      background: rgba(5, 4, 4, 0.88);
+      background: rgba(5, 4, 4, 0);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       display: flex;
@@ -684,7 +684,7 @@
       background-repeat: no-repeat;
       pointer-events: none;
       mix-blend-mode: screen;
-      opacity: 0.18;
+      opacity: 0.5;
       transition: opacity .4s;
     }
 
@@ -1417,7 +1417,7 @@
         <div id="widget-zone">
           <!-- Weather DOM anchors (hidden shell — moved into widget-zone by widget engine) -->
           <div id="wx-main" style="display:none">
-            <div id="wx-loc-name"></div>
+           <!--  <div id="wx-loc-name"></div> -->
             <div class="wx-current">
               <div id="wx-icon">—</div>
               <div class="wx-temp-block">
@@ -2546,6 +2546,12 @@
       render: renderFiveDayWidget,
     },
     // future widgets go here
+    {
+      id: 'spells',
+      name: 'Spells',
+      description: 'Moon-phase spells from the grimoire',
+      render: renderSpellsWidget,
+    },
   ];
 
   // ── Persistence ────────────────────────────────────────────────────────
@@ -2976,6 +2982,52 @@
       container.innerHTML = rows.join('');
     } catch(e) {
       container.innerHTML = `<div class="moon-meta">could not load — ${e.message}</div>`;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // SPELLS WIDGET
+  // ═══════════════════════════════════════════════════════════════════════
+  async function renderSpellsWidget(container) {
+    container.innerHTML = '<div class="moon-meta">loading spells…</div>';
+    try {
+      const res = await fetch('https://subluna.vercel.app/signal/json/spells.json');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // Get current moon phase using the existing moonPhaseName() function
+      const moonIllum = window.SunCalc ? SunCalc.getMoonIllumination(new Date()) : null;
+      const phase = moonIllum ? moonPhaseName(moonIllum.phase) : null;
+
+      // phaseMap tells us which spell categories belong to this phase
+      const categories = (phase && data.phaseMap && data.phaseMap[phase]) || [];
+
+      // Collect all matching spells across those categories
+      const matched = [];
+      categories.forEach(cat => {
+        const catSpells = data.spells && data.spells[cat];
+        if (Array.isArray(catSpells)) matched.push(...catSpells);
+      });
+
+      if (!matched.length) {
+        container.innerHTML = `<div class="moon-meta">no spells for ${phase || 'current phase'}</div>`;
+        return;
+      }
+
+      const phaseHeader = phase
+        ? `<div style="font-size:7px;letter-spacing:.22em;color:var(--signal);text-transform:uppercase;margin-bottom:1rem;opacity:.8;">${phase}</div>`
+        : '';
+
+      container.innerHTML = phaseHeader + matched.map(s => `
+        <div class="spell-entry" style="margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:.5px solid var(--faint);">
+          <div style="font-size:7px;letter-spacing:.22em;color:var(--dust);text-transform:uppercase;margin-bottom:.3rem;">${s.category || ''}</div>
+          <div style="font-family:'Heading Now Book Italic',serif;font-size:1.05rem;color:var(--paper);margin-bottom:.5rem;">${s.title || ''}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--dust);line-height:1.6;white-space:pre-line;">${s.interpreted || s.body || ''}</div>
+        </div>
+      `).join('');
+
+    } catch(e) {
+      container.innerHTML = `<div class="moon-meta">could not load spells — ${e.message}</div>`;
     }
   }
 
