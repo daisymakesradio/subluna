@@ -2995,44 +2995,48 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      // Wait for SunCalc to be available (it loads from CDN)
-      let waited = 0;
-      while (!window.SunCalc && waited < 3000) {
-        await new Promise(r => setTimeout(r, 100));
-        waited += 100;
-      }
+      // Get current moon phase
       const moonIllum = window.SunCalc ? SunCalc.getMoonIllumination(new Date()) : null;
       const phase = moonIllum ? moonPhaseName(moonIllum.phase) : null;
       if (!phase) {
         container.innerHTML = '<div class="moon-meta">could not determine moon phase</div>';
         return;
       }
-      // phaseMap tells us which spell categories belong to this phase
-      const categories = (data.phaseMap && data.phaseMap[phase]) || [];
 
-      // Collect all matching spells across those categories
-      const matched = [];
-      categories.forEach(cat => {
-        const catSpells = data.spells && data.spells[cat];
-        if (Array.isArray(catSpells)) matched.push(...catSpells);
-      });
+      // Pick one spell using lunar cycle index — same method as Signal
+      // Counts lunar cycles since Jan 6 2000, steps through pool one per cycle
+      const knownNew = new Date('2000-01-06T18:14:00Z').getTime();
+      const lunarIndex = Math.floor((Date.now() - knownNew) / (29.530588853 * 24 * 60 * 60 * 1000));
 
-      if (!matched.length) {
-        container.innerHTML = `<div class="moon-meta">no spells for ${phase || 'current phase'}</div>`;
+      const cats = (data.phaseMap && data.phaseMap[phase]) || ['moon'];
+      let spell = null;
+      let category = null;
+      for (const cat of cats) {
+        const pool = (data.spells && data.spells[cat]) || [];
+        if (pool.length) {
+          spell = pool[lunarIndex % pool.length];
+          category = cat;
+          break;
+        }
+      }
+
+      // Fallback to moon category
+      if (!spell && data.spells && data.spells.moon && data.spells.moon.length) {
+        spell = data.spells.moon[lunarIndex % data.spells.moon.length];
+        category = 'moon';
+      }
+
+      if (!spell) {
+        container.innerHTML = `<div class="moon-meta">no spell found for ${phase}</div>`;
         return;
       }
 
-      const phaseHeader = phase
-        ? `<div style="font-size:7px;letter-spacing:.22em;color:var(--signal);text-transform:uppercase;margin-bottom:1rem;opacity:.8;">${phase}</div>`
-        : '';
-
-      container.innerHTML = phaseHeader + matched.map(s => `
-        <div class="spell-entry" style="margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:.5px solid var(--faint);">
-          <div style="font-size:7px;letter-spacing:.22em;color:var(--dust);text-transform:uppercase;margin-bottom:.3rem;">${s.category || ''}</div>
-          <div style="font-family:'Heading Now Book Italic',serif;font-size:1.05rem;color:var(--paper);margin-bottom:.5rem;">${s.title || ''}</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--dust);line-height:1.6;white-space:pre-line;">${s.interpreted || s.body || ''}</div>
-        </div>
-      `).join('');
+      container.innerHTML = `
+        <div style="font-size:7px;letter-spacing:.22em;color:var(--signal);text-transform:uppercase;margin-bottom:.4rem;opacity:.8;">${phase}</div>
+        <div style="font-size:7px;letter-spacing:.22em;color:var(--dust);text-transform:uppercase;margin-bottom:.8rem;">${category}</div>
+        <div style="font-family:'Heading Now Book Italic',serif;font-size:1.05rem;color:var(--paper);margin-bottom:.8rem;">${spell.title || ''}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--dust);line-height:1.6;white-space:pre-line;">${spell.interpreted || spell.body || ''}</div>
+      `;
 
     } catch(e) {
       container.innerHTML = `<div class="moon-meta">could not load spells — ${e.message}</div>`;
