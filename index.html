@@ -2995,12 +2995,20 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      // Get current moon phase using the existing moonPhaseName() function
+      // Wait for SunCalc to be available (it loads from CDN)
+      let waited = 0;
+      while (!window.SunCalc && waited < 3000) {
+        await new Promise(r => setTimeout(r, 100));
+        waited += 100;
+      }
       const moonIllum = window.SunCalc ? SunCalc.getMoonIllumination(new Date()) : null;
       const phase = moonIllum ? moonPhaseName(moonIllum.phase) : null;
-
+      if (!phase) {
+        container.innerHTML = '<div class="moon-meta">could not determine moon phase</div>';
+        return;
+      }
       // phaseMap tells us which spell categories belong to this phase
-      const categories = (phase && data.phaseMap && data.phaseMap[phase]) || [];
+      const categories = (data.phaseMap && data.phaseMap[phase]) || [];
 
       // Collect all matching spells across those categories
       const matched = [];
