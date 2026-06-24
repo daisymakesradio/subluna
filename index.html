@@ -1900,9 +1900,9 @@
       return 1 + eased * (MAX_R - 1);
     }
 
-    function drawAsteroid(a, now, t) {
+    function drawAsteroid(a, now, t, alphaMult = 1) {
       const r = asteroidRadius(a, now);
-      const alpha = Math.min(r / 6, 1);
+      const alpha = Math.min(r / 6, 1) * alphaMult;
       const glowBreathe = 0.5 + 0.5 * Math.sin(t * 1.1 + a.glowPhase);
       const glowR = r * (2.4 + glowBreathe * 0.7);
 
@@ -1950,6 +1950,20 @@
         });
       }
       a.explodeStart = now;
+    }
+
+    function fadeAsteroid(a, now) {
+      if (a.state !== 'alive') return;
+      a.state = 'fading';
+      a.fadeStart = now;
+    }
+
+    function drawFade(a, now, t) {
+      const FADE_DUR = 700;
+      const age = now - a.fadeStart;
+      if (age > FADE_DUR) { a.state = 'dead'; return; }
+      const alphaMult = 1 - (age / FADE_DUR);
+      drawAsteroid(a, now, t, alphaMult);
     }
 
     function drawExplosion(a, now) {
@@ -2020,10 +2034,13 @@
         if (a.state === 'alive') {
           a.rotation += a.spinSpeed;
           if (now - a.born >= APPROACH_DUR) {
-            explodeAsteroid(a, now);
+            fadeAsteroid(a, now);
           } else {
             drawAsteroid(a, now, t);
           }
+        }
+        if (a.state === 'fading') {
+          drawFade(a, now, t);
         }
         if (a.state === 'exploding') {
           drawExplosion(a, now);
