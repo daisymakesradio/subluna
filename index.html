@@ -2723,7 +2723,7 @@
     },
     {
       id: '5day-forecast',
-      name: '5-Day Forecast',
+      name: 'Five-Day Forecast',
       description: 'Daily high/low and conditions for the next 5 days',
       render: renderFiveDayWidget,
     },
@@ -2733,6 +2733,12 @@
       name: 'Spells',
       description: 'Moon-phase spells from the grimoire',
       render: renderSpellsWidget,
+    },
+    {
+      id: 'transits',
+      name: 'Transits',
+      description: 'Current planetary transits + personalized readings',
+      render: renderTransitsWidget,
     },
   ];
 
@@ -3222,6 +3228,186 @@
 
     } catch(e) {
       container.innerHTML = `<div class="moon-meta">could not load spells — ${e.message}</div>`;
+    }
+  }
+
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // TRANSITS WIDGET
+  // ═══════════════════════════════════════════════════════════════════════
+
+  const _TW_GLYPHS  = { Sun:'☉', Moon:'☽', Mercury:'☿', Venus:'♀', Mars:'♂', Jupiter:'♃', Saturn:'♄' };
+  const _TW_SHORT   = { conjunction:'conj', sextile:'sext', square:'sq', trine:'trine', opposition:'opp' };
+  const _TW_ANGLES  = { conjunction:0, sextile:60, square:90, trine:120, opposition:180 };
+  const _TW_SIGNS   = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+
+  let _twLexicon    = null;
+  let _twNatal      = null;
+  let _twActive     = null;
+  let _twContainer  = null;
+
+  function _twTodayPlanets() {
+    const now = new Date();
+    const jd  = now.getTime() / 86400000 + 2440587.5;
+    const m   = now.getMonth() + 1, day = now.getDate(), y = now.getFullYear();
+    const doy = Math.floor((now - new Date(y,0,0)) / 86400000);
+    function sunSign() {
+      const r = [[3,21,'Aries'],[4,20,'Taurus'],[5,21,'Gemini'],[6,21,'Cancer'],
+                 [7,23,'Leo'],[8,23,'Virgo'],[9,23,'Libra'],[10,23,'Scorpio'],
+                 [11,22,'Sagittarius'],[12,22,'Capricorn'],[1,20,'Aquarius'],[2,19,'Pisces']];
+      for (let i=0;i<r.length;i++){
+        const [sm,sd,sn]=r[i],[nm,nd]=r[(i+1)%r.length];
+        if((m===sm&&day>=sd)||(m===nm&&day<nd)) return sn;
+      }
+      return 'Capricorn';
+    }
+    function pSign(period,ref_jd,ref_idx){
+      const deg=((jd-ref_jd)/period*360)%360;
+      const abs=((ref_idx*30)+deg+3600)%360;
+      return {sign:_TW_SIGNS[Math.floor(abs/30)%12],deg:Math.round(abs%30)};
+    }
+    return [
+      {name:'Sun',    sign:sunSign(),             deg:Math.round(((doy-80+365)%365)%30)},
+      {name:'Moon',   ...pSign(29.53,   2460676,2)},
+      {name:'Mercury',...pSign(87.97,   2460650,10)},
+      {name:'Venus',  ...pSign(224.7,   2460600,5)},
+      {name:'Mars',   ...pSign(686.97,  2460400,2)},
+      {name:'Jupiter',...pSign(4332.59, 2458600,1)},
+      {name:'Saturn', ...pSign(10759.22,2458000,9)},
+    ];
+  }
+
+  function _twAbsPos(sign,deg){
+    return (_TW_SIGNS.indexOf(sign)<0?0:_TW_SIGNS.indexOf(sign)*30)+(deg||0);
+  }
+
+  function _twBestAspect(planetName){
+    if(!_twNatal||!_twNatal.length) return null;
+    const tp=_twTodayPlanets().find(p=>p.name===planetName);
+    if(!tp) return null;
+    const tPos=_twAbsPos(tp.sign,tp.deg);
+    let best=null;
+    for(const np of _twNatal){
+      const nPos=_twAbsPos(np.sign,np.deg);
+      let diff=Math.abs(tPos-nPos);
+      if(diff>180) diff=360-diff;
+      for(const [type,angle] of Object.entries(_TW_ANGLES)){
+        const orb=Math.abs(diff-angle);
+        if(orb<=12&&(!best||orb<best.orb)){
+          best={natalPlanet:np.name,aspect:type,orb,key:planetName+'_'+type+'_'+np.name};
+        }
+      }
+    }
+    return best;
+  }
+
+  function _twSelectPlanet(planetName){
+    if(!_twContainer) return;
+    const header=_twContainer.querySelector('.tw-reader-header');
+    const text=_twContainer.querySelector('.tw-reader-text');
+    _twContainer.querySelectorAll('.tw-planet').forEach(el=>el.classList.remove('tw-active'));
+    if(_twActive===planetName){
+      _twActive=null;
+      header.innerHTML='';
+      text.innerHTML='<span class="tw-prompt">select a planet to learn more</span>';
+      return;
+    }
+    _twActive=planetName;
+    _twContainer.querySelectorAll('.tw-planet[data-planet="'+planetName+'"]').forEach(el=>el.classList.add('tw-active'));
+    const asp=_twBestAspect(planetName);
+    const tGlyph=_TW_GLYPHS[planetName]||'';
+    if(!asp){
+      header.innerHTML=tGlyph+' '+planetName;
+      text.innerHTML='<span class="tw-prompt">no close aspect to a natal planet right now</span>';
+      return;
+    }
+    const nGlyph=_TW_GLYPHS[asp.natalPlanet]||'';
+    const short=_TW_SHORT[asp.aspect]||asp.aspect;
+    header.innerHTML=tGlyph+' '+planetName+' <span class="tw-badge">'+short+'</span> '+nGlyph+' natal '+asp.natalPlanet;
+    const entry=_twLexicon?_twLexicon[asp.key]:null;
+    if(entry){
+      text.innerHTML=entry.split(/\n+/).filter(p=>p.trim()).map(p=>'<span style="display:block;margin-bottom:.55rem">'+p.trim()+'</span>').join('');
+    } else {
+      text.innerHTML='<span class="tw-prompt">no reading available for this transit</span>';
+    }
+  }
+
+  async function renderTransitsWidget(container){
+    _twContainer=container;
+    _twActive=null;
+
+    container.innerHTML=`
+      <style>
+        .tw-planets{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem;}
+        .tw-planet{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.04em;
+          color:var(--dust);border:.5px solid var(--faint);padding:.25rem .5rem;
+          cursor:pointer;transition:color .15s,border-color .15s;}
+        .tw-planet.tw-active{color:var(--signal);border-color:var(--signal);}
+        .tw-reader-header{font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+          color:var(--paper);margin-bottom:.5rem;min-height:1.2rem;}
+        .tw-badge{font-size:.6rem;letter-spacing:.1em;color:var(--signal);
+          border:.5px solid var(--signal);padding:.1rem .3rem;margin:0 .2rem;}
+        .tw-reader-text{font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+          color:var(--dust);line-height:1.6;}
+        .tw-prompt{font-style:italic;opacity:.6;}
+      </style>
+      <div class="tw-planets" id="tw-planet-list">loading…</div>
+      <div class="tw-reader-header"></div>
+      <div class="tw-reader-text"><span class="tw-prompt">select a planet to learn more</span></div>
+    `;
+
+    const planetList=container.querySelector('#tw-planet-list');
+    const text=container.querySelector('.tw-reader-text');
+
+    // Render planet pills immediately from local math
+    const planets=_twTodayPlanets();
+    planetList.innerHTML=planets.map(p=>
+      '<span class="tw-planet" data-planet="'+p.name+'" onclick="_twSelectPlanet(\''+p.name+'\')">'+
+      '<span style="margin-right:.2rem">'+((_TW_GLYPHS[p.name])||'')+'</span>'+p.name+
+      ' <span style="opacity:.5">in '+p.sign+'</span></span>'
+    ).join('');
+
+    // Load transit lexicon from Signal
+    if(!_twLexicon){
+      try{
+        const r=await fetch('https://signal-hazel-mu.vercel.app/JSON/transit-lexicon.json');
+        if(r.ok) _twLexicon=await r.json();
+      }catch(e){/* lexicon unavailable */}
+    }
+
+    // Load natal chart using birth data
+    const user=readSublunaUser();
+    if(!user||!user.birth||!user.birth.date||!user.birth.lat){
+      text.innerHTML='<span class="tw-prompt">add birth info in settings for personalized readings</span>';
+      return;
+    }
+
+    try{
+      // Get UTC offset from open-meteo using birth location
+      const tzRes=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+user.birth.lat+
+        '&longitude='+user.birth.lon+'&timezone=auto&forecast_days=1&hourly=temperature_2m');
+      const tzData=await tzRes.json();
+      const offsetH=(tzData.utc_offset_seconds||0)/3600;
+      const offsetStr=(offsetH>=0?'+':'')+offsetH;
+
+      // Build time string Signal expects: "HH:MM MM/DD/YYYY +/-offset"
+      let [h,min]=user.birth.time.split(':').map(Number);
+      if(user.birth.ampm==='PM'&&h<12) h+=12;
+      if(user.birth.ampm==='AM'&&h===12) h=0;
+      const timeStr=String(h).padStart(2,'0')+':'+String(min).padStart(2,'0')+
+        ' '+user.birth.date+' '+offsetStr;
+
+      const chartRes=await fetch('https://signal-hazel-mu.vercel.app/api/chat?target=chart'+
+        '&time='+encodeURIComponent(timeStr)+
+        '&lat='+user.birth.lat+'&lng='+user.birth.lon);
+      if(!chartRes.ok) throw new Error('chart HTTP '+chartRes.status);
+      const chartData=await chartRes.json();
+
+      _twNatal=chartData.planets||[];
+      text.innerHTML='<span class="tw-prompt">select a planet to learn more</span>';
+
+    }catch(e){
+      text.innerHTML='<span class="tw-prompt">could not load chart — '+e.message+'</span>';
     }
   }
 
