@@ -3281,20 +3281,22 @@
     return (_TW_SIGNS.indexOf(sign)<0?0:_TW_SIGNS.indexOf(sign)*30)+(deg||0);
   }
 
-  function _twBestAspect(planetName){
-    if(!_twNatal||!_twNatal.length) return null;
-    const tp=_twTodayPlanets().find(p=>p.name===planetName);
-    if(!tp) return null;
-    const tPos=_twAbsPos(tp.sign,tp.deg);
-    let best=null;
-    for(const np of _twNatal){
-      const nPos=_twAbsPos(np.sign,np.deg);
-      let diff=Math.abs(tPos-nPos);
-      if(diff>180) diff=360-diff;
-      for(const [type,angle] of Object.entries(_TW_ANGLES)){
-        const orb=Math.abs(diff-angle);
-        if(orb<=12&&(!best||orb<best.orb)){
-          best={natalPlanet:np.name,aspect:type,orb,key:planetName+'_'+type+'_'+np.name};
+  function _twBestAspect(planetName) {
+    if (!_twNatal || !_twNatal.length) return null;
+    const tp = _twTodayPlanets().find(p => p.name === planetName);
+    if (!tp) return null;
+    const tPos = _twAbsPos(tp.sign, tp.deg);
+    const TW_TARGETS = new Set(['Sun', 'Moon', 'Rising', 'Saturn']);
+    let best = null;
+    for (const np of _twNatal) {
+      if (!TW_TARGETS.has(np.name)) continue;
+      const nPos = _twAbsPos(np.sign, np.deg);
+      let diff = Math.abs(tPos - nPos);
+      if (diff > 180) diff = 360 - diff;
+      for (const [type, angle] of Object.entries(_TW_ANGLES)) {
+        const orb = Math.abs(diff - angle);
+        if (orb <= 12 && (!best || orb < best.orb)) {
+          best = { natalPlanet: np.name, aspect: type, orb, key: planetName + '_' + type + '_' + np.name };
         }
       }
     }
@@ -3344,7 +3346,7 @@
           cursor:pointer;transition:color .15s,border-color .15s;}
         .tw-planet.tw-active{color:var(--signal);border-color:var(--signal);}
         .tw-reader-header{font-family:'IBM Plex Mono',monospace;font-size:.72rem;
-          color:var(--paper);margin-bottom:.5rem;min-height:1.2rem;}
+          color:var(--ink);margin-bottom:.5rem;min-height:1.2rem;}
         .tw-badge{font-size:.6rem;letter-spacing:.1em;color:var(--signal);
           border:.5px solid var(--signal);padding:.1rem .3rem;margin:0 .2rem;}
         .tw-reader-text{font-family:'IBM Plex Mono',monospace;font-size:.72rem;
@@ -3364,7 +3366,7 @@
     planetList.innerHTML=planets.map(p=>
       '<span class="tw-planet" data-planet="'+p.name+'" onclick="_twSelectPlanet(\''+p.name+'\')">'+
       '<span style="margin-right:.2rem">'+((_TW_GLYPHS[p.name])||'')+'</span>'+p.name+
-      ' <span style="opacity:.5">in '+p.sign+'</span></span>'
+      ' in <span style="color:'+_twSignColor(p.sign)+'">'+p.sign+'</span></span>'
     ).join('');
 
     // Load transit lexicon from Signal
