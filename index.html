@@ -44,112 +44,27 @@
       src: url('FONTS/FUTRFW.TTF') format('truetype');
       font-weight: normal; font-style: normal; font-display: swap;
     }
-    @font-face {
-      font-family: 'Ultra911';
-      src: url('FONTS/ultra911.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Bold';
-      src: url('FONTS/ultra911bold.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Bold Italic';
-      src: url('FONTS/ultra911boldital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Cond';
-      src: url('FONTS/ultra911cond.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Cond Italic';
-      src: url('FONTS/ultra911condital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Expand';
-      src: url('FONTS/ultra911expand.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Expand Italic';
-      src: url('FONTS/ultra911expandital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Grad';
-      src: url('FONTS/ultra911grad.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Grad Italic';
-      src: url('FONTS/ultra911gradital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Half';
-      src: url('FONTS/ultra911half.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Half Italic';
-      src: url('FONTS/ultra911halfital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Italic';
-      src: url('FONTS/ultra911ital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Laser';
-      src: url('FONTS/ultra911laser.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Laser Italic';
-      src: url('FONTS/ultra911laserital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Left';
-      src: url('FONTS/ultra911left.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Semi Italic';
-      src: url('FONTS/ultra911semital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Super Italic';
-      src: url('FONTS/ultra911superital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Title';
-      src: url('FONTS/ultra911title.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 Title Italic';
-      src: url('FONTS/ultra911titleital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 3D';
-      src: url('FONTS/ultra9113d.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
-      font-family: 'Ultra911 3D Italic';
-      src: url('FONTS/ultra9113dital.ttf') format('truetype');
-      font-weight: normal; font-style: normal; font-display: swap;
-    }
-    @font-face {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@font-face {
       font-family: '52Sphere';
       src: url('FONTS/52SPHERE.TTF') format('truetype');
       font-weight: normal;
@@ -1614,6 +1529,8 @@
     })();
     fillIntroUser(data);
     introSetStatus('');
+    const btn = document.getElementById('intro-load-recent-btn');
+    if (btn) btn.style.display = 'none';
   }
 
   function introRenderSuggestions(box, data, onPick) {
