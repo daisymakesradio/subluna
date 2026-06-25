@@ -684,6 +684,7 @@
 
     /* Star chart bg inside sidebar */
     .sidebar-bg-chart {
+      display: none !important;
       position: absolute;
       inset: 0;
       z-index: 0;
@@ -692,11 +693,8 @@
       background-repeat: no-repeat;
       pointer-events: none;
       mix-blend-mode: screen;
-      opacity: 0;
-      transition: opacity .8s ease;
-    }
-    .sidebar-bg-chart.visible {
       opacity: 0.5;
+      transition: opacity .4s;
     }
 
     /* Sidebar interior */
@@ -2840,11 +2838,6 @@
       bg.style.display = 'block';
       requestAnimationFrame(() => { bg.style.opacity = '0.18'; });
     }
-    // Also show the sidebar star chart
-    const sidebarChart = document.getElementById('sidebar-bg-chart');
-    if (sidebarChart) {
-      sidebarChart.classList.add('visible');
-    }
     const ctrl = document.getElementById('starChart-opacity-ctrl');
     if (ctrl) ctrl.classList.add('visible');
     // If star-chart.js exposes a load function, call it
@@ -3346,7 +3339,7 @@
     const sign = getSunSignFromDate(user.birth.date);
     if (!sign) { textEl.textContent = 'could not determine sign'; return; }
 
-    if (signEl) signEl.textContent = sign.toUpperCase() + ' · SOLAR SCOPE';
+    if (signEl) signEl.textContent = 'SOLAR SCOPE';
 
     const today = new Date().toISOString().slice(0, 10);
     const cacheKey = `${sign}:${today}`;
@@ -3359,6 +3352,10 @@
         const json = await r.json();
         reading = json?.data?.horoscope || null;
         if (!reading) throw new Error('no reading in response');
+        
+        // Strip "Today, [sign]," from the beginning if present and replace with personalized version
+        reading = reading.replace(/^Today,\s+\w+,\s+/, `Today, ${user.birth.city || 'friend'}, `);
+        
         _scopeHoroCache[cacheKey] = reading;
       } catch(e) {
         textEl.textContent = 'scope unavailable — ' + e.message;
