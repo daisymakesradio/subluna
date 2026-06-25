@@ -3247,6 +3247,14 @@
     status.className = 'nav-status loading';
     status.textContent = 'plotting course…';
     readout.innerHTML = '';
+    
+    // Play navigation sound
+    try {
+      const audio = new Audio('./AUDIO/navigation.mp3');
+      audio.play().catch(e => console.log('audio error:', e));
+    } catch(e) {
+      console.log('audio not available');
+    }
 
     // Pass natal data if loaded by the transits widget
     const natal = (_twNatal && _twNatal.length) ? _twNatal : [];
@@ -3369,51 +3377,9 @@
       }
     }
 
-    // Score sentences against nav vocab
-    const stopWords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of',
-      'with','is','it','be','are','was','were','you','your','this','that','will','can',
-      'as','by','so','if','not','from','have','has','had','do','does','did','its','their',
-      'they','which','what','all','we','our','my','me','he','she','him','her','who','when']);
-
-    function tokenize(str) {
-      return str.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
-    }
-
-    const vocabSet = new Set(navVocab.map(w => w.toLowerCase()));
-    const sentences = reading.match(/[^.!?]+[.!?]+/g) || [reading];
-
-    const scored = sentences.map(s => {
-      const words = tokenize(s);
-      const hits = words.filter(w => vocabSet.has(w));
-      const score = words.length > 0 ? hits.length / words.length : 0;
-      return { s: s.trim(), score, hits };
-    }).sort((a, b) => b.score - a.score);
-
-    // Surface top resonant words (up to 4 unique)
-    const topWords = [];
-    for (const item of scored) {
-      for (const h of item.hits) {
-        if (!topWords.includes(h) && topWords.length < 4) topWords.push(h);
-      }
-    }
-
-    if (freqEl) {
-      if (topWords.length) {
-        freqEl.innerHTML = topWords.map(w =>
-          `<div class="scope-freq-item">${w}</div>`
-        ).join('');
-      } else {
-        freqEl.innerHTML = '<div class="scope-freq-item" style="opacity:.35">no resonant frequencies</div>';
-      }
-    }
-
-    // Render full reading, highlighting resonant sentences
-    const topScoreThreshold = scored[0]?.score > 0 ? scored[0].score * 0.5 : 0;
-    textEl.innerHTML = sentences.map(s => {
-      const sc = scored.find(x => x.s === s.trim());
-      const isHot = sc && sc.score >= topScoreThreshold && sc.score > 0;
-      return `<span style="${isHot ? 'color:var(--ink);opacity:1' : ''}">${s.trim()} </span>`;
-    }).join('');
+    // Simply display the full horoscope reading without scoring
+    if (freqEl) freqEl.innerHTML = '';
+    textEl.innerHTML = reading;
   }
 
   </script>
