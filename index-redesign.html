@@ -672,8 +672,8 @@
       flex: 1;
       height: 100%;
       position: relative;
-      background: rgba(5, 4, 4, 0.495);
-      backdrop-filter: blur(40px);
+      background: rgba(5, 4, 4, 0);
+      backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
@@ -684,6 +684,7 @@
 
     /* Star chart bg inside sidebar */
     .sidebar-bg-chart {
+      display: none !important;
       position: absolute;
       inset: 0;
       z-index: 0;
@@ -692,11 +693,8 @@
       background-repeat: no-repeat;
       pointer-events: none;
       mix-blend-mode: screen;
-      opacity: 0;
-      transition: opacity .8s ease;
-    }
-    .sidebar-bg-chart.visible {
       opacity: 0.5;
+      transition: opacity .4s;
     }
 
     /* Sidebar interior */
@@ -1503,7 +1501,7 @@
           </div>
           <div class="nav-status" id="nav-status"></div>
           <div class="nav-readout" id="nav-readout">
-          <!--   <div class="nav-empty">— awaiting destination —<span class="nav-cursor"></span></div> -->
+            <div class="nav-empty">— awaiting destination —<span class="nav-cursor"></span></div>
           </div>
 
           <!-- ── Scope panel (hidden until nav plots) ── -->
@@ -2515,7 +2513,7 @@
         </div>`
       ).join('');
     }
-    if(main) main.style.display = 'none';
+    if(main) main.style.display = 'block';
     wxSetStatus('');
   }
 
@@ -2839,11 +2837,6 @@
     if (bg) {
       bg.style.display = 'block';
       requestAnimationFrame(() => { bg.style.opacity = '0.18'; });
-    }
-    // Also show the sidebar star chart
-    const sidebarChart = document.getElementById('sidebar-bg-chart');
-    if (sidebarChart) {
-      sidebarChart.classList.add('visible');
     }
     const ctrl = document.getElementById('starChart-opacity-ctrl');
     if (ctrl) ctrl.classList.add('visible');
