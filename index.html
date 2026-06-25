@@ -207,11 +207,11 @@
     }
 
     #starChart-opacity-ctrl {
+      display: none !important;
       position: fixed;
       bottom: calc(var(--bottombar-h, 142px) + 12px);
       right: 10px;
       z-index: 10010;
-      display: flex;
       align-items: center;
       gap: .4rem;
       font-family: 'IBM Plex Mono', monospace;
@@ -684,7 +684,6 @@
 
     /* Star chart bg inside sidebar */
     .sidebar-bg-chart {
-      display: none !important;
       position: absolute;
       inset: 0;
       z-index: 0;
@@ -693,8 +692,11 @@
       background-repeat: no-repeat;
       pointer-events: none;
       mix-blend-mode: screen;
+      opacity: 0;
+      transition: opacity .8s ease;
+    }
+    .sidebar-bg-chart.visible {
       opacity: 0.5;
-      transition: opacity .4s;
     }
 
     /* Sidebar interior */
@@ -1506,7 +1508,6 @@
 
           <!-- ── Scope panel (hidden until nav plots) ── -->
           <div id="scope-panel">
-            <div class="scope-panel-label">SCOPE</div>
             <div class="scope-sign" id="scope-sign"></div>
             <div class="scope-freq-row" id="scope-freq"></div>
             <div class="scope-text" id="scope-text"><span class="scope-loading">reading frequencies…</span></div>
@@ -2838,6 +2839,11 @@
       bg.style.display = 'block';
       requestAnimationFrame(() => { bg.style.opacity = '0.18'; });
     }
+    // Show the sidebar star chart
+    const sidebarChart = document.getElementById('sidebar-bg-chart');
+    if (sidebarChart) {
+      sidebarChart.classList.add('visible');
+    }
     const ctrl = document.getElementById('starChart-opacity-ctrl');
     if (ctrl) ctrl.classList.add('visible');
     // If star-chart.js exposes a load function, call it
@@ -3354,7 +3360,7 @@
         if (!reading) throw new Error('no reading in response');
         
         // Strip "Today, [sign]," from the beginning if present and replace with personalized version
-        reading = reading.replace(/^Today,\s+\w+,\s+/, `Today, ${user.birth.city || 'friend'}, `);
+        reading = reading.replace(/^Today,\s+\w+,\s+/, `Today, ${user.name || 'friend'}, `);
         
         _scopeHoroCache[cacheKey] = reading;
       } catch(e) {
