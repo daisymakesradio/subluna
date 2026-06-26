@@ -1555,6 +1555,18 @@
             <div class="scope-freq-row" id="scope-freq"></div>
             <div class="scope-text" id="scope-text"><span class="scope-loading">reading frequencies…</span></div>
           </div>
+
+          <!-- ── Transits panel (hidden until nav plots) ── -->
+          <div id="transits-panel" style="display:none; margin-top:1rem; padding-top:1rem; border-top:.5px solid var(--faint);">
+            <div class="scope-panel-label">CURRENT TRANSITS</div>
+            <div id="transits-container"></div>
+          </div>
+
+          <!-- ── Moon phase panel (hidden until nav plots) ── -->
+          <div id="moon-phase-panel" style="display:none; margin-top:1rem; padding-top:1rem; border-top:.5px solid var(--faint);">
+            <div class="scope-panel-label">MOON PHASE</div>
+            <div id="moon-phase-container"></div>
+          </div>
         </div>
 
         <!-- Hidden weather shell (not displayed) -->
@@ -3266,6 +3278,26 @@
     }
   }
 
+  // ── Post-nav panels: transits + moon phase ───────────────────────────────
+  // Called once per navRun after a successful plot. Panels stay visible for
+  // the rest of the session once shown (re-runs just re-render in place).
+  function _showPostNavPanels() {
+    // Transits
+    const transitPanel = document.getElementById('transits-panel');
+    const transitContainer = document.getElementById('transits-container');
+    if (transitPanel && transitContainer) {
+      transitPanel.style.display = 'block';
+      renderTransitsWidget(transitContainer);
+    }
+    // Moon phase
+    const moonPanel = document.getElementById('moon-phase-panel');
+    const moonContainer = document.getElementById('moon-phase-container');
+    if (moonPanel && moonContainer) {
+      moonPanel.style.display = 'block';
+      renderMoonWidget(moonContainer);
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════════════════
   // NAV COMPUTER + SCOPE ENGINE
   // ═══════════════════════════════════════════════════════════════════════
@@ -3380,8 +3412,9 @@
       // Load star chart on first successful nav plot
       if (typeof starChartReveal === 'function') starChartReveal();
 
-      // Trigger scope panel
+      // Trigger scope panel, then transits + moon phase
       scopeRun(_lastNavVocab);
+      _showPostNavPanels();
 
     } catch(e) {
       status.className = 'nav-status';
