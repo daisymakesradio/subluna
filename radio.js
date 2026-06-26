@@ -623,3 +623,64 @@ function rShuffle() {
   rRenderStation(rStations[rIdx]);
   if (wasActive) rStartAudio();
 }
+
+// ── MEDIA SESSION (iOS lock screen controls) ──────────────────────────────────
+// Sets up lock screen prev/next buttons to change station instead of seek ±10s.
+// Called every time a station starts playing so metadata stays current.
+
+function rPrev() {
+  if (rScanLocked) { rShowLockedHint(); return; }
+  if (rHistory.length < 2) return; // nowhere to go back to
+  const wasActive = (rState === 'playing' || rState === 'loading' || rState === 'buffering');
+  _rHardStop();
+  rHistory.pop(); // remove current
+  rIdx = rHistory[rHistory.length - 1]; // restore previous
+  rRenderStation(rStations[rIdx]);
+  rUpdateMediaSession();
+  if (wasActive) rStartAudio();
+}
+
+function rUpdateMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  const s = rStations[rIdx];
+  if (!s) return;
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  cleanStationName(s.name),
+    artist: rNowStamp.country || 'Subluna Radio',
+    album:  'SUBLUNA',
+    // artwork tells iOS this is a "track" rather than a stream,
+    // which switches the lock screen from seek±10s to prev/next buttons
+    artwork: [
+      { src: '/IMAGES/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+  });
+
+  // Only define prev/next — deliberately omit seekforward/seekbackward so
+  // iOS shows ⏮⏭ track buttons rather than the ±10s seek buttons.
+  navigator.mediaSession.setActionHandler('previoustrack', () => { rPrev(); });
+  navigator.mediaSession.setActionHandler('nexttrack',     () => { rSkip(); });
+
+  // Play/pause from the lock screen
+  navigator.mediaSession.setActionHandler('play',  () => { if (rState !== 'playing') rStartAudio(); });
+  navigator.mediaSession.setActionHandler('pause', () => { if (rState === 'playing' || rState === 'loading' || rState === 'buffering') rStopAudio(); });
+
+  // Explicitly null out seek handlers so iOS can't fall back to them
+  try { navigator.mediaSession.setActionHandler('seekforward',  null); } catch(e) {}
+  try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch(e) {}
+}
+
+function rSyncMediaSessionState() {
+  if (!('mediaSession' in navigator)) return;
+  if (rState === 'playing')  navigator.mediaSession.playbackState = 'playing';
+  else if (rState === 'stopped') navigator.mediaSession.playbackState = 'paused';
+  else navigator.mediaSession.playbackState = 'none';
+}
+
+// Hook into existing audio events to keep Media Session in sync
+aud.addEventListener('playing', () => {
+  rUpdateMediaSession();
+  rSyncMediaSessionState();
+});
+aud.addEventListener('pause', () => { rSyncMediaSessionState(); });
+aud.addEventListener('ended', () => { rSyncMediaSessionState(); });
