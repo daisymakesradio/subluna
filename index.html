@@ -1278,8 +1278,11 @@
       display: flex;
       gap: 0;
       align-items: stretch;
-      margin-bottom: .35rem;
+      margin-bottom: .2rem;
       border: none;
+    }
+    .nav-submit-row {
+      margin-bottom: .35rem;
     }
     .nav-prompt-glyph {
       font-family: 'IBM Plex Mono', monospace;
@@ -1312,7 +1315,7 @@
       border-left: none;
       color: #00dd88;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px;
+      font-size: 14px;
       letter-spacing: .08em;
       padding: .3rem .55rem;
       cursor: pointer;
@@ -1320,6 +1323,7 @@
       transition: background .12s, color .12s;
       white-space: nowrap;
       flex-shrink: 0;
+      border: 1px solid #00dd88;
     }
     .nav-submit:hover:not(:disabled) { background: #00dd88; color: #050404; }
     .nav-submit:disabled { opacity: .25; cursor: not-allowed; }
@@ -1418,6 +1422,10 @@
       padding: .6rem 0 .4rem;
       font-style: italic;
     }
+    .nav-subluna-text .nav-destination {
+      display: block;
+      margin-top: 1.6rem;
+    }
     .nav-oracle-lines {
       margin-top: .5rem;
       display: flex;
@@ -1513,18 +1521,20 @@
         <!-- ── Navigation panel (hardcoded, always present) ── -->
         <div id="widget-zone">
           <div class="nav-panel-label">NAV COMPUTER</div>
-          <div class="nav-input-row">
+          <div class="nav-input-row" style="margin-top: -0.5rem; margin-bottom: 0.5rem;">
             <span class="nav-prompt-glyph">›_</span>
             <input
               class="nav-input"
               id="nav-question"
               type="text"
-              placeholder="set destination"
-              maxlength="140"
+              placeholder="where are we going?"
+              maxlength="240"
               autocomplete="off"
               autocorrect="off"
               spellcheck="false"
             />
+          </div>
+          <div class="nav-submit-row">
             <button class="nav-submit" id="nav-submit-btn" onclick="navRun()">PLOT</button>
           </div>
           <div class="nav-status" id="nav-status"></div>
@@ -3319,8 +3329,12 @@
         const oracleHtml = oracleLines.map((l, i) =>
           `<div class="nav-oracle-line"><span class="nav-oracle-num">[${i+1}]</span> ${l}</div>`
         ).join('');
+        const destSplit = sublunaText.replace(/(destination:)/i, '|||$1');
+        const parts = destSplit.split('|||');
+        const mainText = parts[0];
+        const destText = parts[1] ? `<span class="nav-destination">${parts[1]}</span>` : '';
         readout.innerHTML = `
-          <div class="nav-subluna-text" id="nav-subluna-out">${sublunaText}</div>
+          <div class="nav-subluna-text" id="nav-subluna-out">${mainText}${destText}</div>
           <div class="nav-oracle-lines" id="nav-oracle-reveal" style="display:none">${oracleHtml}</div>
         `;
         // Triple-click on the text reveals oracle lines (debug mode)
