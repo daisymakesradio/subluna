@@ -1308,7 +1308,14 @@
       outline: none;
       min-width: 0;
     }
+    @keyframes placeholderPulse {
+      0%, 100% { opacity: .2; }
+      50%       { opacity: .7; }
+    }
     .nav-input::placeholder { color: #00dd88; opacity: .5; font-style: normal; }
+    .nav-input:placeholder-shown::placeholder {
+      animation: placeholderPulse 2.8s ease-in-out infinite;
+    }
     .nav-submit {
       background: transparent;
       border: none;
@@ -1505,7 +1512,7 @@
         <img class="ahc-icon" src="IMAGES/asteroid-1.png" alt=""><span class="ahc-count" id="asteroid-hit-count">0</span>
       </div>
     </div>
-    <div class="topbar-wordmark" id="subluna-topbar-wordmark" style="cursor:pointer;user-select:none;" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))"><span>S</span>UBSCREEN</div>
+    <div class="topbar-wordmark" id="subluna-topbar-wordmark" style="cursor:pointer;user-select:none;" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))"><span>N</span>AVIGATION</div>
     <div class="topbar-right">
       <button id="rrefresh" onclick="rRefresh()" style="display:none"><span class="rspinicon">↺</span></button>
       <button id="subluna-logout-btn">LOGOUT</button>
@@ -1535,7 +1542,7 @@
             />
           </div>
           <div class="nav-submit-row">
-            <button class="nav-submit" id="nav-submit-btn" onclick="navRun()">PLOT</button>
+            <button class="nav-submit" id="nav-submit-btn" onclick="navRun()">SET</button>
           </div>
           <div class="nav-status" id="nav-status"></div>
           <div class="nav-readout" id="nav-readout">
