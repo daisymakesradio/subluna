@@ -1278,7 +1278,7 @@
       display: flex;
       gap: 0;
       align-items: stretch;
-      margin-bottom: 1rem;
+      margin-bottom: .35rem;
       border: none;
     }
     .nav-prompt-glyph {
@@ -1329,17 +1329,18 @@
       color: #00dd88;
       text-transform: uppercase;
       opacity: 1;
-      margin-bottom: .75rem;
-      min-height: 1rem;
+      margin-bottom: 0;
+      min-height: 0;
       padding-left: 0;
       font-family: 'IBM Plex Mono', monospace;
     }
+    .nav-status:not(:empty) { margin-bottom: .5rem; }
     .nav-readout {
       display: flex;
       flex-direction: column;
       gap: 0;
       border: none;
-      padding: .5rem 0;
+      padding: .15rem 0 .5rem;
     }
     .nav-row {
       display: block;
@@ -1409,6 +1410,31 @@
     }
     @keyframes navPulse { 0%,100%{opacity:.3} 50%{opacity:.7} }
     .nav-status.loading { animation: navPulse 1.4s ease-in-out infinite; opacity: 1; }
+    .nav-subluna-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .78rem;
+      color: var(--ink);
+      line-height: 1.7;
+      padding: .6rem 0 .4rem;
+      font-style: italic;
+    }
+    .nav-oracle-lines {
+      margin-top: .5rem;
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+    .nav-oracle-line {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .7rem;
+      color: var(--dust);
+      line-height: 1.5;
+    }
+    .nav-oracle-num {
+      color: var(--signal);
+      opacity: .7;
+      margin-right: .35rem;
+    }
   </style>
 </head>
 <body>
@@ -3283,34 +3309,52 @@
       // Store vocab for scope scoring
       _lastNavVocab = data.meta?.expandedVocab || [];
 
-      const now = new Date();
-      const ts = String(now.getHours()).padStart(2,'0') + ':' +
-                 String(now.getMinutes()).padStart(2,'0') + ':' +
-                 String(now.getSeconds()).padStart(2,'0');
-
-      const freqCount = data.meta?.vocabSize || 0;
-      const poolCount = data.meta?.poolSize || 0;
-
       status.className = 'nav-status';
-      status.textContent = `[${ts}]  ${freqCount} freq  ·  ${poolCount} samples  ·  course locked`;
+      status.textContent = '';
 
-      readout.innerHTML = `
-        <div class="nav-row">
-          <span class="nav-row-label nav-origin">origin</span>
-          <span class="nav-row-text">${origin}</span>
-        </div>
-        <div class="nav-row">
-          <span class="nav-row-label nav-sector">sector</span>
-          <div class="nav-sector-list">
-            ${(sector || []).map(s => `<div class="nav-sector-item">${s}</div>`).join('')}
+      const sublunaText = data.subluna?.navigation;
+
+      if (sublunaText) {
+        const oracleLines = data.cards || [];
+        const oracleHtml = oracleLines.map((l, i) =>
+          `<div class="nav-oracle-line"><span class="nav-oracle-num">[${i+1}]</span> ${l}</div>`
+        ).join('');
+        readout.innerHTML = `
+          <div class="nav-subluna-text" id="nav-subluna-out">${sublunaText}</div>
+          <div class="nav-oracle-lines" id="nav-oracle-reveal" style="display:none">${oracleHtml}</div>
+        `;
+        // Triple-click on the text reveals oracle lines (debug mode)
+        let _clickTimer = null, _clickCount = 0;
+        document.getElementById('nav-subluna-out').addEventListener('click', function() {
+          _clickCount++;
+          clearTimeout(_clickTimer);
+          _clickTimer = setTimeout(() => {
+            if (_clickCount >= 3) {
+              const el = document.getElementById('nav-oracle-reveal');
+              if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            }
+            _clickCount = 0;
+          }, 400);
+        });
+      } else {
+        readout.innerHTML = `
+          <div class="nav-row">
+            <span class="nav-row-label nav-origin">origin</span>
+            <span class="nav-row-text">${origin}</span>
           </div>
-        </div>
-        <div class="nav-row">
-          <span class="nav-row-label nav-dest">destination</span>
-          <span class="nav-row-text">${destination}</span>
-        </div>
-        <div class="nav-meta-line">dst: "${question.slice(0,60)}${question.length>60?'…':''}"</div>
-      `;
+          <div class="nav-row">
+            <span class="nav-row-label nav-sector">sector</span>
+            <div class="nav-sector-list">
+              ${(sector || []).map(s => `<div class="nav-sector-item">${s}</div>`).join('')}
+            </div>
+          </div>
+          <div class="nav-row">
+            <span class="nav-row-label nav-dest">destination</span>
+            <span class="nav-row-text">${destination}</span>
+          </div>
+          
+        `;
+      }
 
       // Load star chart on first successful nav plot
       if (typeof starChartReveal === 'function') starChartReveal();
