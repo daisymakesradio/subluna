@@ -919,6 +919,68 @@
     }
     .moon-sign-line .moon-sign-name { color: var(--signal); font-style: normal; }
 
+    /* ── Retrograde panel ────────────────────────────────────────────── */
+    .retro-card {
+      font-family: 'IBM Plex Mono', monospace;
+      border: .5px solid var(--faint);
+      padding: .6rem .65rem;
+      margin-bottom: .6rem;
+    }
+    .retro-card:last-child { margin-bottom: 0; }
+    .retro-card-head {
+      display: flex;
+      align-items: baseline;
+      gap: .4rem;
+      margin-bottom: .3rem;
+    }
+    .retro-card-glyph {
+      color: #00dd88;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .retro-card-title {
+      font-size: 10px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #00dd88;
+    }
+    .retro-card-governs {
+      font-size: 9px;
+      color: var(--dust);
+      letter-spacing: .02em;
+      margin-bottom: .5rem;
+      line-height: 1.5;
+    }
+    .retro-card-row {
+      display: flex;
+      gap: .4rem;
+      font-size: 9px;
+      letter-spacing: .04em;
+      margin-bottom: .3rem;
+    }
+    .retro-card-kicker {
+      color: #00dd88;
+      text-transform: uppercase;
+      opacity: .7;
+      flex-shrink: 0;
+      width: 5.2rem;
+    }
+    .retro-card-value { color: var(--ink); }
+    .retro-card-section { margin-top: .5rem; }
+    .retro-card-section .retro-card-kicker { width: auto; display: block; margin-bottom: .2rem; }
+    .retro-card-body {
+      font-size: 10px;
+      line-height: 1.7;
+      color: var(--ink);
+      opacity: .9;
+    }
+    .retro-none {
+      font-size: 10px;
+      color: var(--dust);
+      letter-spacing: .03em;
+      opacity: .7;
+    }
+
     /* ── Weather widget ───────────────────────────────────────────────── */
     .wx-section-label {
       font-family: 'Heading Now Medium', sans-serif;
@@ -1322,7 +1384,7 @@
       border: none;
       color: #f7f2ea;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 16px;
+      font-size: 14px;
       letter-spacing: .04em;
       padding: .25rem .4rem;
       outline: none;
@@ -1586,6 +1648,12 @@
           <div id="moon-phase-panel" style="display:none; margin-top:1rem; padding-top:1rem; border-top:.5px solid var(--faint);">
             <div class="scope-panel-label">MOON PHASE</div>
             <div id="moon-phase-container"></div>
+          </div>
+
+          <!-- ── Retrograde panel (hidden until nav plots) ── -->
+          <div id="retrograde-panel" style="display:none; margin-top:1rem; padding-top:1rem; border-top:.5px solid var(--faint);">
+            <div class="scope-panel-label">RETROGRADE</div>
+            <div id="retrograde-container"></div>
           </div>
         </div>
 
@@ -2516,12 +2584,23 @@
   // toggles the subscreen panel, which slides down from underneath it
   // (and back up to collapse), like pulling a screen down from the bar.
   let _navInited = false;
+  const _navExpandSfx = new Audio('AUDIO/nav-screen-expand.mp3');
+  const _navCollapseSfx = new Audio('AUDIO/nav-screen-collapse.mp3');
+  _navExpandSfx.preload = 'auto';
+  _navCollapseSfx.preload = 'auto';
   function sidebarSetOpen(open) {
     const sidebar = document.getElementById('subluna-sidebar');
     const toggle  = document.getElementById('subscreen-toggle');
+    const wasOpen = sidebar.classList.contains('open');
     sidebar.classList.toggle('open', open);
     document.body.classList.toggle('sidebar-open', open);
     if (toggle) toggle.classList.toggle('subscreen-open', open);
+
+    if (open !== wasOpen) {
+      const sfx = open ? _navExpandSfx : _navCollapseSfx;
+      sfx.currentTime = 0;
+      sfx.play().catch(() => {});
+    }
 
     if (open) {
       const inner = sidebar.querySelector('.sidebar-inner');
@@ -3020,6 +3099,76 @@
       </div>`;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // RETROGRADE WIDGET
+  // ═══════════════════════════════════════════════════════════════════════
+  let _retroData = null;
+
+  function fmtRetroDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function buildRetroData(planets) {
+    const now = new Date();
+    return planets.map(p => {
+      const active = p.periods.find(period => {
+        const s = new Date(period.start + 'T00:00:00');
+        const e = new Date(period.end + 'T23:59:59');
+        return now >= s && now <= e;
+      });
+      return { ...p, active: !!active, activeStarted: active ? active.start : null, activeEnds: active ? active.end : null };
+    });
+  }
+
+  function renderRetroCard(p) {
+    const dateLine = p.activeStarted && p.activeEnds
+      ? `${fmtRetroDate(p.activeStarted)} → ${fmtRetroDate(p.activeEnds)}`
+      : p.duration;
+    const themes = (p.themes || []).join(' · ');
+    return `
+      <div class="retro-card">
+        <div class="retro-card-head">
+          <span class="retro-card-glyph">${p.glyph || ''}</span>
+          <span class="retro-card-title">${p.planet} retrograde</span>
+        </div>
+        <div class="retro-card-governs">GOVERNS: ${p.governs}</div>
+        <div class="retro-card-row"><span class="retro-card-kicker">OCCURS</span><span class="retro-card-value">${p.occurs}</span></div>
+        <div class="retro-card-row"><span class="retro-card-kicker">WINDOW</span><span class="retro-card-value">${dateLine}</span></div>
+        <div class="retro-card-section">
+          <span class="retro-card-kicker">COMMON THEMES</span>
+          <div class="retro-card-body">${themes}</div>
+        </div>
+        <div class="retro-card-section">
+          <span class="retro-card-kicker">WHAT IT MEANS</span>
+          <div class="retro-card-body">${p.meaning}</div>
+        </div>
+        <div class="retro-card-section">
+          <span class="retro-card-kicker">GUIDANCE</span>
+          <div class="retro-card-body">${p.guidance}</div>
+        </div>
+      </div>`;
+  }
+
+  async function renderRetrogradeWidget(container) {
+    container.innerHTML = '<div class="retro-none">loading…</div>';
+    try {
+      if (!_retroData) {
+        const res = await fetch('https://signal-hazel-mu.vercel.app/JSON/retrogrades.json');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        _retroData = data.planets || [];
+      }
+      const computed = buildRetroData(_retroData);
+      const active = computed.filter(p => p.active);
+      container.innerHTML = active.length
+        ? active.map(renderRetroCard).join('')
+        : '<div class="retro-none">no active retrogrades</div>';
+    } catch (e) {
+      container.innerHTML = `<div class="retro-none">could not load — ${e.message}</div>`;
+    }
+  }
+
   // ── 5-DAY FORECAST WIDGET ──────────────────────────────────────────────
   async function renderFiveDayWidget(container) {
     const user = readSublunaUser();
@@ -3327,6 +3476,13 @@
     if (moonPanel && moonContainer) {
       moonPanel.style.display = 'block';
       renderMoonWidget(moonContainer);
+    }
+    // Retrograde
+    const retroPanel = document.getElementById('retrograde-panel');
+    const retroContainer = document.getElementById('retrograde-container');
+    if (retroPanel && retroContainer) {
+      retroPanel.style.display = 'block';
+      renderRetrogradeWidget(retroContainer);
     }
   }
 
