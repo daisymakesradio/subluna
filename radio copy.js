@@ -576,22 +576,17 @@ function bbExpand() {
 function bbToggleCollapse() {
   const bar = document.getElementById('subluna-bottombar');
   const btn = document.getElementById('bb-collapse-btn');
-  const topClick = document.getElementById('bb-top-click');
   if (!bar) return;
   const collapsed = bar.classList.toggle('collapsed'); if (!collapsed) { bbScheduleAutoCollapse(); } else { bbClearAutoCollapse(); }
-  const label = collapsed ? 'expand player' : 'collapse player';
-  if (btn) btn.setAttribute('aria-label', label);
-  if (topClick) topClick.setAttribute('aria-label', label);
+  btn.setAttribute('aria-label', collapsed ? 'expand player' : 'collapse player');
   localStorage.removeItem('bb_collapsed');
 }
 (function bbRestoreCollapse() {
   const bar = document.getElementById('subluna-bottombar');
   const btn = document.getElementById('bb-collapse-btn');
-  const topClick = document.getElementById('bb-top-click');
   if (localStorage.getItem('bb_collapsed') === '1') {
     if (bar) bar.classList.add('collapsed');
     if (btn) btn.setAttribute('aria-label', 'expand player');
-    if (topClick) topClick.setAttribute('aria-label', 'expand player');
   } else {
     setTimeout(() => {
       if (bar && !bar.classList.contains('collapsed')) { bbScheduleAutoCollapse(); }

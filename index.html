@@ -405,6 +405,26 @@
       transform: rotate(180deg);
     }
 
+    /* Clickable strip over the bottombar's top border image (the cockpit
+       frame's top edge). This is a FIXED sibling, not a child of
+       #subluna-bottombar — that element has overflow:hidden, which would
+       clip anything positioned into its border area. JS keeps this synced
+       to sit exactly over the top 40px (the border-width top) of the
+       bottombar, whatever its rendered height is. Same action as
+       #subscreen-toggle, just a bigger, more obvious tap target. */
+    #bb-top-click {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 413px;
+      height: 40px;
+      cursor: pointer;
+      z-index: 10025;
+      visibility: hidden;
+    }
+    #bb-top-click.active { visibility: visible; }
+
     .bb-bg-chart {
       position: absolute;
       left: 0; right: 0; bottom: 0;
@@ -1302,7 +1322,7 @@
       border: none;
       color: #f7f2ea;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 14px;
+      font-size: 16px;
       letter-spacing: .04em;
       padding: .25rem .4rem;
       outline: none;
@@ -1598,6 +1618,12 @@
   <div id="subscreen-toggle" role="button" aria-label="toggle subscreen" onclick="sidebarSetOpen(!document.getElementById('subluna-sidebar').classList.contains('open'))">
     <span class="subscreen-toggle-arrow">▾</span>
   </div>
+
+  <!-- Bigger tap target layered over the bottombar's top border image —
+       clicking anywhere along that strip expands/collapses the subscreen,
+       same as the small arrow tab above. Position is synced to the
+       bottombar's actual height by initBottombarSync(). -->
+  <div id="bb-top-click" role="button" aria-label="expand radio player" onclick="bbToggleCollapse()"></div>
   
   <!-- Cockpit surround: wider outer frame image, fills dead space behind the bezel -->
   <div id="cockpit-surround" aria-hidden="true"></div>
@@ -1947,16 +1973,22 @@
     document.getElementById('subluna-topbar')?.classList.add('active');
     document.getElementById('subluna-bottombar')?.classList.add('active');
     document.getElementById('subscreen-toggle')?.classList.add('active');
+    document.getElementById('bb-top-click')?.classList.add('active');
 
     // Dynamically sync --bottombar-h to the cockpit player's actual rendered
     // height so the subscreen sidebar always stops exactly at its top edge.
     // rAF ensures we measure after the browser has finished layout.
     (function initBottombarSync() {
       const bar = document.getElementById('subluna-bottombar');
+      const topClick = document.getElementById('bb-top-click');
       if (!bar) return;
       const update = () => requestAnimationFrame(() => {
         const h = bar.getBoundingClientRect().height;
         if (h > 0) document.documentElement.style.setProperty('--bottombar-h', h + 'px');
+        // Keep the top-border click strip pinned over the border image:
+        // it sits `h - 40px` up from the bottom, same 40px as the CSS
+        // border-width top on #subluna-bottombar.
+        if (topClick && h > 0) topClick.style.bottom = (h - 40) + 'px';
       });
       new ResizeObserver(update).observe(bar);
       update(); // run immediately after boot
